@@ -429,7 +429,14 @@ const CANDIDATE_LINKS = [
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vSurhYD5E2awXB7JULubDvz5-OVExEU4PNnRjLd9Frb3jVWItrZjfvAfrY-CO52DXzaP-nFv6FH9jf2/pub?gid=1363721647&single=true&output=csv"
 ];
 
-const ALLOWED_PLATES = ['ITU7602', 'JAP5A22', 'ITM7D77', 'ITM7377', 'IUW5128'];
+// Lista de placas oficiais (Master)
+const ALLOWED_PLATES = ['ITU7602', 'JAP5A22', 'ITM7D77', 'IUW6I28'];
+
+// Mapeamento de Apelidos/Erros (De -> Para)
+const PLATE_ALIASES = {
+    'ITM7377': 'ITM7D77', // Placa Antiga -> Placa Nova
+    'IUW5128': 'IUW6I28'  // Placa com erro/antiga -> Placa Oficial
+};
 
 let globalData = { vehicles: {}, list: [] };
 let charts = { history: null, dist: null };
@@ -439,7 +446,14 @@ let charts = { history: null, dist: null };
 const normalizePlate = (plate) => {
     if (!plate) return "UNKNOWN";
     let clean = plate.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    
+    // Tenta limpar texto extra se a placa estiver colada (ex: JAP5A22 - SAVEIRO)
     if(clean.length > 7) clean = clean.substring(0,7);
+    
+    // Aplica Alias (Unificação de placas)
+    if (PLATE_ALIASES[clean]) {
+        return PLATE_ALIASES[clean];
+    }
     return clean;
 };
 
@@ -465,25 +479,17 @@ const isYear = (date, year) => {
 
 // --- PARSING INTELIGENTE ---
 
-// Função crucial para ignorar linhas de cabeçalho inúteis
 function smartParse(csvText) {
-    // 1. Parse bruto sem cabeçalho para ver todas as linhas
     const raw = Papa.parse(csvText, { header: false, skipEmptyLines: true }).data;
-    
     if (!raw || raw.length === 0) return [];
 
-    // 2. Procurar linha que parece ser cabeçalho
-    // Palavras chaves para identificar inicio da tabela real
     const keyTerms = ['placa', 'renavam', 'litros', 'valor', 'seguradora', 'mecânico', 'descrição', 'sinistro'];
-    
     let headerIndex = -1;
 
     for (let i = 0; i < Math.min(raw.length, 20); i++) {
         const rowStr = raw[i].join(' ').toLowerCase();
-        // Se a linha contiver pelo menos 2 termos chave ou "placa" e mais algo
         const matchCount = keyTerms.filter(term => rowStr.includes(term)).length;
         if (matchCount >= 1) { 
-             // Validação extra: não pode ser linha de titulo unico (ex: "DADOS DA FROTA")
              if (raw[i].filter(c => c.trim() !== "").length > 2) {
                 headerIndex = i;
                 break;
@@ -491,11 +497,8 @@ function smartParse(csvText) {
         }
     }
 
-    if (headerIndex === -1) return []; // Não achou estrutura conhecida
+    if (headerIndex === -1) return [];
 
-    // 3. Reprocessar a partir da linha correta
-    // Cortamos o texto original ou reconstruimos o CSV a partir do array
-    // Vamos reconstruir array de objetos manualmente para ser mais rapido
     const headers = raw[headerIndex].map(h => h.trim());
     const dataRows = raw.slice(headerIndex + 1);
     
@@ -534,7 +537,6 @@ async function initDashboard() {
 async function fetchAllLinks() {
     const promises = CANDIDATE_LINKS.map(url => fetch(url).then(r => r.text()));
     const csvTexts = await Promise.all(promises);
-    // Usar smartParse aqui
     return csvTexts.map(text => smartParse(text));
 }
 
@@ -549,7 +551,6 @@ function categorizeDatasets(datasets) {
 
     datasets.forEach(data => {
         if (!data || data.length === 0) return;
-        // Pega as chaves do primeiro objeto valido
         const headers = Object.keys(data[0]);
         const hString = headers.join(',').toLowerCase();
 
@@ -560,7 +561,6 @@ function categorizeDatasets(datasets) {
         } else if (hString.includes('sinistro') && hString.includes('b.o')) {
             result.claims = result.claims.concat(data);
         } else if ((hString.includes('descrição') && hString.includes('mecânico')) || hString.includes('solicitação')) {
-            // Prioridade para Claims se tiver "sinistro", senão é Manutencao
             result.maintenance = result.maintenance.concat(data);
         } else if (hString.includes('litros') && hString.includes('valor un')) {
             result.fuel = result.fuel.concat(data);
@@ -572,37 +572,19 @@ function categorizeDatasets(datasets) {
 function processData(data) {
     const vehicles = {};
 
-    // 1. Inicializar Veículos
-    data.fleet.forEach(row => {
-        const plate = normalizePlate(row.Placa);
-        if (!ALLOWED_PLATES.includes(plate)) return;
-
-        vehicles[plate] = {
-            plate: plate,
-            rawPlate: row.Placa,
-            model: row.Modelo,
-            year: row["Ano modelo"],
-            renavam: row.Renavam,
-            ipva: parseCurrency(row["IPVA (último ano)"]),
-            dpvat: parseCurrency(row["DPVAT pago?"]?.replace(/[^\d,]/g, '') || '0'),
-            owner: row.Proprietário,
-            insuranceCost: 0,
-            insuranceData: null,
-            maintenanceLogs: [],
-            fuelLogs: [],
-            claimsLogs: []
-        };
-    });
-
+    // Função auxiliar para garantir que o veículo exista
     const ensureVehicle = (plate) => {
+        // Se não estiver na lista permitida, ignora
         if (!ALLOWED_PLATES.includes(plate)) return null;
+        
         if (!vehicles[plate]) {
+            // Cria um "Placehoder" se o veículo não foi encontrado no arquivo de frota
             vehicles[plate] = {
                 plate: plate,
-                rawPlate: plate,
-                model: "Veículo Cadastrado",
+                rawPlate: plate, // Será atualizado se encontrarmos no arquivo de frota
+                model: "Modelo Não Informado",
                 year: "-",
-                renavam: "-",
+                renavam: "Não Cadastrado",
                 ipva: 0, dpvat: 0, owner: "-",
                 insuranceCost: 0, insuranceData: null,
                 maintenanceLogs: [], fuelLogs: [], claimsLogs: []
@@ -610,6 +592,24 @@ function processData(data) {
         }
         return vehicles[plate];
     };
+
+    // 1. Processar Dados da Frota (Se existirem)
+    data.fleet.forEach(row => {
+        const plate = normalizePlate(row.Placa);
+        
+        // Se a placa estiver na lista permitida
+        if (ALLOWED_PLATES.includes(plate)) {
+            // Cria ou atualiza
+            const v = ensureVehicle(plate);
+            v.rawPlate = row.Placa; // Placa original do CSV
+            v.model = row.Modelo || v.model;
+            v.year = row["Ano modelo"] || v.year;
+            v.renavam = row.Renavam || v.renavam;
+            v.ipva = parseCurrency(row["IPVA (último ano)"]);
+            v.dpvat = parseCurrency(row["DPVAT pago?"]?.replace(/[^\d,]/g, '') || '0');
+            v.owner = row.Proprietário || v.owner;
+        }
+    });
 
     // 2. Seguros
     data.insurance.forEach(row => {
@@ -626,14 +626,13 @@ function processData(data) {
         }
     });
 
-    // 3. Manutenção
+    // 3. Manutenção (Usa ensureVehicle para capturar veículos sem cadastro na frota)
     data.maintenance.forEach(row => {
         const plate = normalizePlate(row.Placa);
-        let target = ensureVehicle(plate);
-        if (!target && plate === 'ITM7377') target = vehicles['ITM7D77'];
+        const car = ensureVehicle(plate);
         
-        if (target) {
-            target.maintenanceLogs.push({
+        if (car) {
+            car.maintenanceLogs.push({
                 date: row["Data da solicitação"] || row.Data,
                 desc: row["Descrição da manutenção"],
                 mechanic: row.Mecânico || row.Oficina,
@@ -645,11 +644,10 @@ function processData(data) {
     // 4. Sinistros
     data.claims.forEach(row => {
         const plate = normalizePlate(row.Placa);
-        let target = ensureVehicle(plate);
-        if (!target && plate === 'ITM7377') target = vehicles['ITM7D77'];
+        const car = ensureVehicle(plate);
 
-        if (target) {
-            target.claimsLogs.push({
+        if (car) {
+            car.claimsLogs.push({
                 date: row["Data do sinistro"],
                 desc: row["Descrição do sinistro"],
                 bo: row["B.O"] || '-',
@@ -661,13 +659,12 @@ function processData(data) {
     // 5. Abastecimento (SOMENTE 2025)
     data.fuel.forEach(row => {
         const plate = normalizePlate(row.Placa);
-        let target = ensureVehicle(plate);
-        if (!target && plate === 'ITM7377') target = vehicles['ITM7D77'];
+        const car = ensureVehicle(plate);
 
-        if (target) {
+        if (car) {
             const dateObj = parseDate(row.Data);
             if (dateObj && isYear(dateObj, 2025)) {
-                target.fuelLogs.push({
+                car.fuelLogs.push({
                     date: row.Data,
                     dateObj: dateObj,
                     liters: parseFloat(row.Litros.replace(',', '.')) || 0,
