@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Frota Inteligente</title>
+    <title>Dashboard Controle de Frota</title>
     <!-- Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Phosphor Icons -->
@@ -18,6 +18,7 @@
             --secondary: #10B981;
             --danger: #EF4444;
             --warning: #F59E0B;
+            --purple: #8B5CF6; /* Cor para Sinistros */
             --text-main: #1F2937;
             --text-muted: #6B7280;
             --bg-body: #F3F4F6;
@@ -165,6 +166,7 @@
         .kpi-card.total { border-color: var(--primary); }
         .kpi-card.fuel { border-color: var(--warning); }
         .kpi-card.maint { border-color: var(--danger); }
+        .kpi-card.claims { border-color: var(--purple); }
         .kpi-card.fixed { border-color: var(--secondary); }
 
         .kpi-label { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;}
@@ -254,6 +256,10 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .error-msg {
+            color: #EF4444; font-weight: bold; margin-top: 10px; text-align: center;
+        }
 
         @media (max-width: 1024px) {
             .container { grid-template-columns: 1fr; }
@@ -276,7 +282,7 @@
     <aside class="sidebar">
         <div class="app-title">
             <i class="ph ph-car-profile" style="font-size: 1.5em;"></i>
-            Gestão de Frota
+            Controle de Frota
         </div>
         <div style="margin-bottom: 10px; font-size: 0.85rem; color: #666; font-weight: 600;">SELECIONE O VEÍCULO</div>
         <div class="vehicle-list" id="vehicleList"></div>
@@ -304,7 +310,7 @@
             <div class="kpi-card total">
                 <div class="kpi-label"><i class="ph ph-currency-dollar"></i> Custo Total (2025)</div>
                 <div class="kpi-value" id="kpiTotal">R$ 0,00</div>
-                <div class="kpi-sub">Soma de Manutenção + Combustível (2025)</div>
+                <div class="kpi-sub">Combustível + Manut. + Sinistros + Fixos</div>
             </div>
             <div class="kpi-card fuel">
                 <div class="kpi-label"><i class="ph ph-gas-pump"></i> Abastecimento (2025)</div>
@@ -312,11 +318,16 @@
                 <div class="kpi-sub" id="kpiLiters">0 Litros</div>
             </div>
             <div class="kpi-card maint">
-                <div class="kpi-label"><i class="ph ph-wrench"></i> Manutenção & Sinistros</div>
+                <div class="kpi-label"><i class="ph ph-wrench"></i> Manutenção</div>
                 <div class="kpi-value" id="kpiMaint">R$ 0,00</div>
-                <div class="kpi-sub" id="kpiClaims">Histórico completo</div>
+                <div class="kpi-sub">Preventiva e Corretiva</div>
             </div>
-            <div class="kpi-card fixed">
+            <div class="kpi-card claims">
+                <div class="kpi-label"><i class="ph ph-warning-octagon"></i> Sinistros</div>
+                <div class="kpi-value" id="kpiClaims">R$ 0,00</div>
+                <div class="kpi-sub">Acidentes e Ocorrências</div>
+            </div>
+             <div class="kpi-card fixed">
                 <div class="kpi-label"><i class="ph ph-file-text"></i> Custos Fixos</div>
                 <div class="kpi-value" id="kpiFixed">R$ 0,00</div>
                 <div class="kpi-sub">IPVA + Seguro (Anual)</div>
@@ -330,7 +341,7 @@
                 <canvas id="historyChart"></canvas>
             </div>
             <div class="chart-container">
-                <h3 class="chart-title">Distribuição</h3>
+                <h3 class="chart-title">Distribuição (2025)</h3>
                 <canvas id="distChart"></canvas>
             </div>
         </div>
@@ -338,7 +349,8 @@
         <!-- Tables -->
         <div class="details-section">
             <div class="tabs">
-                <div class="tab active" onclick="switchTab('maintenance')">Manutenções e Sinistros</div>
+                <div class="tab active" onclick="switchTab('maintenance')">Manutenções</div>
+                <div class="tab" onclick="switchTab('claims')">Sinistros</div>
                 <div class="tab" onclick="switchTab('fuel')">Abastecimentos (2025)</div>
                 <div class="tab" onclick="switchTab('info')">Dados Cadastrais</div>
             </div>
@@ -347,7 +359,18 @@
                 <div style="max-height: 400px; overflow-y: auto;">
                     <table id="maintenanceTable">
                         <thead>
-                            <tr><th style="width: 120px;">Data</th><th>Descrição</th><th>Oficina/Local</th><th style="width: 120px;">Valor</th></tr>
+                            <tr><th style="width: 120px;">Data</th><th>Descrição</th><th>Oficina/Mecânico</th><th style="width: 120px;">Valor</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-claims" class="hidden">
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table id="claimsTable">
+                        <thead>
+                            <tr><th style="width: 120px;">Data</th><th>Descrição</th><th>B.O</th><th style="width: 120px;">Valor</th></tr>
                         </thead>
                         <tbody></tbody>
                     </table>
@@ -394,7 +417,6 @@
 <script>
 // --- CONFIGURAÇÃO ---
 
-// Lista de links fornecida pelo usuário
 const CANDIDATE_LINKS = [
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vSurhYD5E2awXB7JULubDvz5-OVExEU4PNnRjLd9Frb3jVWItrZjfvAfrY-CO52DXzaP-nFv6FH9jf2/pub?gid=1632914010&single=true&output=csv",
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vSurhYD5E2awXB7JULubDvz5-OVExEU4PNnRjLd9Frb3jVWItrZjfvAfrY-CO52DXzaP-nFv6FH9jf2/pub?gid=732632586&single=true&output=csv",
@@ -407,9 +429,7 @@ const CANDIDATE_LINKS = [
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vSurhYD5E2awXB7JULubDvz5-OVExEU4PNnRjLd9Frb3jVWItrZjfvAfrY-CO52DXzaP-nFv6FH9jf2/pub?gid=1363721647&single=true&output=csv"
 ];
 
-// Placas permitidas (Whitelist) - Normalizadas (sem hifen)
 const ALLOWED_PLATES = ['ITU7602', 'JAP5A22', 'ITM7D77', 'ITM7377', 'IUW5128'];
-// Nota: Adicionei ITM7377 pois alguns registros antigos podem usar essa placa para o mesmo veículo.
 
 let globalData = { vehicles: {}, list: [] };
 let charts = { history: null, dist: null };
@@ -420,9 +440,6 @@ const normalizePlate = (plate) => {
     if (!plate) return "UNKNOWN";
     let clean = plate.toUpperCase().replace(/[^A-Z0-9]/g, '');
     if(clean.length > 7) clean = clean.substring(0,7);
-    // Alias para garantir que ITM7377 e ITM7D77 sejam tratados como o mesmo se necessário
-    // Mas respeitando o pedido de filtro, vamos manter separados se a chave for diferente, 
-    // porem, na hora de exibir, vamos permitir ambos se estiverem na whitelist.
     return clean;
 };
 
@@ -436,7 +453,6 @@ const parseCurrency = (value) => {
 
 const parseDate = (dateStr) => {
     if(!dateStr) return null;
-    // Tenta formato dd/mm/yyyy
     const parts = dateStr.split('/');
     if(parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]);
     return null;
@@ -446,6 +462,51 @@ const isYear = (date, year) => {
     if (!date) return false;
     return date.getFullYear() === year;
 };
+
+// --- PARSING INTELIGENTE ---
+
+// Função crucial para ignorar linhas de cabeçalho inúteis
+function smartParse(csvText) {
+    // 1. Parse bruto sem cabeçalho para ver todas as linhas
+    const raw = Papa.parse(csvText, { header: false, skipEmptyLines: true }).data;
+    
+    if (!raw || raw.length === 0) return [];
+
+    // 2. Procurar linha que parece ser cabeçalho
+    // Palavras chaves para identificar inicio da tabela real
+    const keyTerms = ['placa', 'renavam', 'litros', 'valor', 'seguradora', 'mecânico', 'descrição', 'sinistro'];
+    
+    let headerIndex = -1;
+
+    for (let i = 0; i < Math.min(raw.length, 20); i++) {
+        const rowStr = raw[i].join(' ').toLowerCase();
+        // Se a linha contiver pelo menos 2 termos chave ou "placa" e mais algo
+        const matchCount = keyTerms.filter(term => rowStr.includes(term)).length;
+        if (matchCount >= 1) { 
+             // Validação extra: não pode ser linha de titulo unico (ex: "DADOS DA FROTA")
+             if (raw[i].filter(c => c.trim() !== "").length > 2) {
+                headerIndex = i;
+                break;
+             }
+        }
+    }
+
+    if (headerIndex === -1) return []; // Não achou estrutura conhecida
+
+    // 3. Reprocessar a partir da linha correta
+    // Cortamos o texto original ou reconstruimos o CSV a partir do array
+    // Vamos reconstruir array de objetos manualmente para ser mais rapido
+    const headers = raw[headerIndex].map(h => h.trim());
+    const dataRows = raw.slice(headerIndex + 1);
+    
+    return dataRows.map(row => {
+        let obj = {};
+        headers.forEach((h, idx) => {
+            if(h) obj[h] = row[idx];
+        });
+        return obj;
+    });
+}
 
 // --- FETCH E PROCESSAMENTO ---
 
@@ -462,21 +523,21 @@ async function initDashboard() {
         if (globalData.list.length > 0) {
             selectVehicle(globalData.list[0].plate);
         } else {
-            alert("Nenhum veículo correspondente aos filtros encontrado.");
+            document.getElementById('vehicleList').innerHTML = '<div class="error-msg">Nenhum veículo encontrado nos filtros.</div>';
         }
     } catch (e) {
         console.error(e);
-        document.getElementById('loadingText').innerText = "Erro ao carregar dados. Verifique os links.";
+        document.getElementById('loadingText').innerText = "Erro ao carregar dados.";
     }
 }
 
 async function fetchAllLinks() {
     const promises = CANDIDATE_LINKS.map(url => fetch(url).then(r => r.text()));
     const csvTexts = await Promise.all(promises);
-    return csvTexts.map(text => Papa.parse(text, { header: true, skipEmptyLines: true }).data);
+    // Usar smartParse aqui
+    return csvTexts.map(text => smartParse(text));
 }
 
-// Função inteligente para descobrir o que é cada CSV baseado nas colunas (Duck Typing)
 function categorizeDatasets(datasets) {
     let result = {
         fleet: [],
@@ -488,6 +549,7 @@ function categorizeDatasets(datasets) {
 
     datasets.forEach(data => {
         if (!data || data.length === 0) return;
+        // Pega as chaves do primeiro objeto valido
         const headers = Object.keys(data[0]);
         const hString = headers.join(',').toLowerCase();
 
@@ -495,10 +557,11 @@ function categorizeDatasets(datasets) {
             result.fleet = result.fleet.concat(data);
         } else if (hString.includes('corretora') && hString.includes('seguradora')) {
             result.insurance = result.insurance.concat(data);
-        } else if ((hString.includes('descrição') && hString.includes('mecânico')) || hString.includes('solicitação')) {
-            result.maintenance = result.maintenance.concat(data);
         } else if (hString.includes('sinistro') && hString.includes('b.o')) {
             result.claims = result.claims.concat(data);
+        } else if ((hString.includes('descrição') && hString.includes('mecânico')) || hString.includes('solicitação')) {
+            // Prioridade para Claims se tiver "sinistro", senão é Manutencao
+            result.maintenance = result.maintenance.concat(data);
         } else if (hString.includes('litros') && hString.includes('valor un')) {
             result.fuel = result.fuel.concat(data);
         }
@@ -509,7 +572,7 @@ function categorizeDatasets(datasets) {
 function processData(data) {
     const vehicles = {};
 
-    // 1. Inicializar Veículos (FROTA)
+    // 1. Inicializar Veículos
     data.fleet.forEach(row => {
         const plate = normalizePlate(row.Placa);
         if (!ALLOWED_PLATES.includes(plate)) return;
@@ -531,8 +594,6 @@ function processData(data) {
         };
     });
 
-    // Garantir que veiculos da whitelist existam mesmo se nao estiverem no arquivo de frota
-    // (Cria placeholders se achar dados em outros arquivos)
     const ensureVehicle = (plate) => {
         if (!ALLOWED_PLATES.includes(plate)) return null;
         if (!vehicles[plate]) {
@@ -568,10 +629,7 @@ function processData(data) {
     // 3. Manutenção
     data.maintenance.forEach(row => {
         const plate = normalizePlate(row.Placa);
-        // Tenta match exato ou verifica alias comum ITM7377/ITM7D77
         let target = ensureVehicle(plate);
-        
-        // Hack para ITM: se nao achou ITM7D77 mas tem ITM7377
         if (!target && plate === 'ITM7377') target = vehicles['ITM7D77'];
         
         if (target) {
@@ -594,6 +652,7 @@ function processData(data) {
             target.claimsLogs.push({
                 date: row["Data do sinistro"],
                 desc: row["Descrição do sinistro"],
+                bo: row["B.O"] || '-',
                 value: parseCurrency(row.Valor)
             });
         }
@@ -607,7 +666,6 @@ function processData(data) {
 
         if (target) {
             const dateObj = parseDate(row.Data);
-            // FILTRO: Somente 2025
             if (dateObj && isYear(dateObj, 2025)) {
                 target.fuelLogs.push({
                     date: row.Data,
@@ -650,12 +708,10 @@ function selectVehicle(plate) {
     const car = globalData.vehicles[plate];
     if (!car) return;
 
-    // UI Updates
     document.querySelectorAll('.vehicle-btn').forEach(b => b.classList.remove('active'));
     const btn = document.getElementById(`btn-${plate}`);
     if(btn) btn.classList.add('active');
 
-    // Header Info
     document.getElementById('displayPlate').innerText = car.rawPlate;
     document.getElementById('displayModel').innerText = car.model;
     document.getElementById('displayRenavam').innerText = `REN: ${car.renavam}`;
@@ -663,29 +719,24 @@ function selectVehicle(plate) {
     document.getElementById('displayInsurer').innerText = car.insuranceData ? `Seg: ${car.insuranceData.insurer}` : 'Sem Seguro';
     document.getElementById('displayOwner').innerText = `Prop: ${car.owner}`;
 
-    // Calc Totals
-    // Maintenance & Claims (All Time)
+    // Cálculos
     const totalMaint = car.maintenanceLogs.reduce((s, i) => s + i.value, 0);
     const totalClaims = car.claimsLogs.reduce((s, i) => s + i.value, 0);
-    
-    // Fuel (2025 Only)
     const totalFuel2025 = car.fuelLogs.reduce((s, i) => s + i.total, 0);
     const totalLiters2025 = car.fuelLogs.reduce((s, i) => s + i.liters, 0);
-    
-    // Fixed
     const fixedCosts = (car.ipva || 0) + (car.insuranceCost || 0);
     
-    // KPI Display
     const fmt = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     
-    document.getElementById('kpiTotal').innerText = fmt(totalFuel2025 + totalMaint + totalClaims); // Total mix
+    // KPIs
+    document.getElementById('kpiTotal').innerText = fmt(totalFuel2025 + totalMaint + totalClaims + fixedCosts);
     document.getElementById('kpiFuel').innerText = fmt(totalFuel2025);
     document.getElementById('kpiLiters').innerText = `${totalLiters2025.toFixed(1).replace('.', ',')} L (2025)`;
-    document.getElementById('kpiMaint').innerText = fmt(totalMaint + totalClaims);
-    document.getElementById('kpiClaims').innerText = totalClaims > 0 ? `Inclui ${fmt(totalClaims)} em sinistros` : 'Sem sinistros';
+    document.getElementById('kpiMaint').innerText = fmt(totalMaint);
+    document.getElementById('kpiClaims').innerText = fmt(totalClaims);
     document.getElementById('kpiFixed').innerText = fmt(fixedCosts);
 
-    // Info Tab Details
+    // Dados Cadastrais
     document.getElementById('infoPlate').innerText = car.plate;
     document.getElementById('infoModelFull').innerText = car.model;
     document.getElementById('infoYearFull').innerText = car.year;
@@ -704,36 +755,42 @@ function selectVehicle(plate) {
     }
 
     updateTables(car);
-    updateCharts(car, totalFuel2025, totalMaint + totalClaims, fixedCosts);
+    updateCharts(car, totalFuel2025, totalMaint, totalClaims, fixedCosts);
 }
 
 function updateTables(car) {
-    // Maintenance Table
+    // Manutenção
     const maintBody = document.querySelector('#maintenanceTable tbody');
     maintBody.innerHTML = '';
-    
-    const combinedMaint = [
-        ...car.maintenanceLogs.map(l => ({...l, type: 'Manutenção'})),
-        ...car.claimsLogs.map(l => ({...l, type: 'Sinistro', mechanic: 'Sinistro'}))
-    ].sort((a, b) => parseDate(b.date) - parseDate(a.date));
-
-    combinedMaint.forEach(item => {
+    car.maintenanceLogs.sort((a, b) => parseDate(b.date) - parseDate(a.date)).forEach(item => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${item.date || '-'}</td>
-            <td><span style="color:${item.type === 'Sinistro' ? 'var(--danger)' : 'inherit'}">${item.desc}</span></td>
+            <td>${item.desc}</td>
             <td>${item.mechanic || '-'}</td>
             <td>${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
         `;
         maintBody.appendChild(tr);
     });
 
-    // Fuel Table
+    // Sinistros
+    const claimsBody = document.querySelector('#claimsTable tbody');
+    claimsBody.innerHTML = '';
+    car.claimsLogs.sort((a, b) => parseDate(b.date) - parseDate(a.date)).forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${item.date || '-'}</td>
+            <td>${item.desc}</td>
+            <td>${item.bo}</td>
+            <td>${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+        `;
+        claimsBody.appendChild(tr);
+    });
+
+    // Combustivel
     const fuelBody = document.querySelector('#fuelTable tbody');
     fuelBody.innerHTML = '';
-    const sortedFuel = [...car.fuelLogs].sort((a, b) => b.dateObj - a.dateObj);
-
-    sortedFuel.forEach(item => {
+    car.fuelLogs.sort((a, b) => b.dateObj - a.dateObj).forEach(item => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${item.date}</td>
@@ -745,38 +802,35 @@ function updateTables(car) {
     });
 }
 
-function updateCharts(car, fuel, maint, fixed) {
+function updateCharts(car, fuel, maint, claims, fixed) {
     // 1. Dist Chart
     if (charts.dist) charts.dist.destroy();
     const ctxDist = document.getElementById('distChart').getContext('2d');
     charts.dist = new Chart(ctxDist, {
         type: 'doughnut',
         data: {
-            labels: ['Combustível (2025)', 'Manutenção/Sinistros', 'Fixos'],
+            labels: ['Combustível', 'Manutenção', 'Sinistros', 'Fixos'],
             datasets: [{
-                data: [fuel, maint, fixed],
-                backgroundColor: ['#F59E0B', '#EF4444', '#10B981'],
+                data: [fuel, maint, claims, fixed],
+                backgroundColor: ['#F59E0B', '#EF4444', '#8B5CF6', '#10B981'],
                 borderWidth: 0
             }]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
     });
 
-    // 2. History Chart (Mix of Fuel 2025 + All time maint?)
-    // To be consistent with "Abastecimento vigente", let's show timeline of 2025 for everything ideally,
-    // OR show Fuel for 2025 and Maint for 2025. Let's filter Maint for 2025 too for the chart to be comparable.
-    
+    // 2. History Chart (Focus on 2025)
     const timeline = {};
-    
     const addToTimeline = (dateStr, val) => {
         const d = parseDate(dateStr);
-        if(!d || d.getFullYear() !== 2025) return; // Only 2025 for chart consistency
+        if(!d || d.getFullYear() !== 2025) return; 
         const key = `2025-${(d.getMonth()+1).toString().padStart(2, '0')}`;
         if(!timeline[key]) timeline[key] = 0;
         timeline[key] += val;
     };
 
     car.fuelLogs.forEach(l => addToTimeline(l.date, l.total));
+    // Adicionar apenas manutenções/sinistros de 2025 no gráfico para coerência
     car.maintenanceLogs.forEach(l => addToTimeline(l.date, l.value));
     car.claimsLogs.forEach(l => addToTimeline(l.date, l.value));
 
@@ -794,7 +848,7 @@ function updateCharts(car, fuel, maint, fixed) {
         data: {
             labels: timelineLabels,
             datasets: [{
-                label: 'Custos 2025 (R$)',
+                label: 'Custos Mensais 2025 (R$)',
                 data: timelineData,
                 backgroundColor: '#4F46E5',
                 borderRadius: 4
@@ -805,18 +859,18 @@ function updateCharts(car, fuel, maint, fixed) {
 }
 
 function switchTab(tabName) {
-    ['maintenance', 'fuel', 'info'].forEach(t => document.getElementById(`tab-${t}`).classList.add('hidden'));
+    ['maintenance', 'claims', 'fuel', 'info'].forEach(t => document.getElementById(`tab-${t}`).classList.add('hidden'));
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     
     document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-    // Simple active toggle based on index assumption or query
+    
     const tabs = document.querySelectorAll('.tab');
     if(tabName === 'maintenance') tabs[0].classList.add('active');
-    if(tabName === 'fuel') tabs[1].classList.add('active');
-    if(tabName === 'info') tabs[2].classList.add('active');
+    if(tabName === 'claims') tabs[1].classList.add('active');
+    if(tabName === 'fuel') tabs[2].classList.add('active');
+    if(tabName === 'info') tabs[3].classList.add('active');
 }
 
-// Start
 initDashboard();
 </script>
 
