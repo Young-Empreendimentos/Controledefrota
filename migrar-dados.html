@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Migração de Dados - Controle de Frota</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+
+<div id="toast-container" class="toast-container"></div>
+
+<div style="max-width: 900px; margin: 0 auto; padding: 20px;">
+    <div class="nav-header">
+        <div class="app-title" style="margin-bottom: 0;">
+            <i class="ph ph-database"></i>
+            Migração de Dados
+        </div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">
+                <i class="ph ph-arrow-left"></i> Voltar ao Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="form-container" style="margin-top: 20px;">
+        <div class="form-title">
+            <i class="ph ph-cloud-arrow-up"></i> Importar Dados do Google Sheets
+        </div>
+        
+        <p style="color: var(--text-muted); margin-bottom: 20px;">
+            Esta ferramenta permite importar dados existentes das planilhas do Google Sheets para o banco de dados Supabase.
+            Os links abaixo são os mesmos utilizados no dashboard original.
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <!-- Veículos -->
+            <div class="form-container" style="background: #F9FAFB; box-shadow: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong><i class="ph ph-car"></i> Veículos (Frota)</strong>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">Dados cadastrais dos veículos</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="migrarVeiculos()" id="btnVeiculos">
+                        <i class="ph ph-upload"></i> Importar
+                    </button>
+                </div>
+                <div id="statusVeiculos" style="margin-top: 10px; font-size: 0.85rem;"></div>
+            </div>
+
+            <!-- Seguros -->
+            <div class="form-container" style="background: #F9FAFB; box-shadow: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong><i class="ph ph-shield-check"></i> Seguros</strong>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">Dados de seguros dos veículos</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="migrarSeguros()" id="btnSeguros">
+                        <i class="ph ph-upload"></i> Importar
+                    </button>
+                </div>
+                <div id="statusSeguros" style="margin-top: 10px; font-size: 0.85rem;"></div>
+            </div>
+
+            <!-- Manutenções -->
+            <div class="form-container" style="background: #F9FAFB; box-shadow: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong><i class="ph ph-wrench"></i> Manutenções</strong>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">Histórico de manutenções</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="migrarManutencoes()" id="btnManutencoes">
+                        <i class="ph ph-upload"></i> Importar
+                    </button>
+                </div>
+                <div id="statusManutencoes" style="margin-top: 10px; font-size: 0.85rem;"></div>
+            </div>
+
+            <!-- Sinistros -->
+            <div class="form-container" style="background: #F9FAFB; box-shadow: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong><i class="ph ph-warning-octagon"></i> Sinistros</strong>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">Registro de sinistros</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="migrarSinistros()" id="btnSinistros">
+                        <i class="ph ph-upload"></i> Importar
+                    </button>
+                </div>
+                <div id="statusSinistros" style="margin-top: 10px; font-size: 0.85rem;"></div>
+            </div>
+
+            <!-- Abastecimentos -->
+            <div class="form-container" style="background: #F9FAFB; box-shadow: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong><i class="ph ph-gas-pump"></i> Abastecimentos</strong>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">Histórico de abastecimentos</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="migrarAbastecimentos()" id="btnAbastecimentos">
+                        <i class="ph ph-upload"></i> Importar
+                    </button>
+                </div>
+                <div id="statusAbastecimentos" style="margin-top: 10px; font-size: 0.85rem;"></div>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #E5E7EB;">
+            <button class="btn btn-success" onclick="migrarTodos()" style="width: 100%;">
+                <i class="ph ph-cloud-arrow-up"></i> Importar Todos os Dados
+            </button>
+        </div>
+    </div>
+
+    <div class="form-container" style="margin-top: 20px;">
+        <div class="form-title">
+            <i class="ph ph-terminal"></i> Log de Migração
+        </div>
+        <div id="migrationLog" style="background: #1F2937; color: #10B981; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 0.85rem; max-height: 300px; overflow-y: auto;">
+            Aguardando início da migração...
+        </div>
+    </div>
+</div>
+
+<script src="js/supabase.js"></script>
+<script>
+// Links do Google Sheets (mesmo do dashboard original)
+const SHEETS = {
+    frota: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSurhYD5E2awXB7JULubDvz5-OVExEU4PNnRjLd9Frb3jVWItrZjfvAfrY-CO52DXzaP-nFv6FH9jf2/pub?gid=1632914010&single=true&output=csv",
+    seguros: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSurhYD5E2awXB7JULubDvz5-OVExEU4PNnRjLd9Frb3jVWItrZjfvAfrY-CO52DXzaP-nFv6FH9jf2/pub?gid=732632586&single=true&output=csv",
+    manutencoes: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSurhYD5E2awXB7JULubDvz5-OVExEU4PNnRjLd9Frb3jVWItrZjfvAfrY-CO52DXzaP-nFv6FH9jf2/pub?gid=331662549&single=true&output=csv",
+    sinistros: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSurhYD5E2awXB7JULubDvz5-OVExEU4PNnRjLd9Frb3jVWItrZjfvAfrY-CO52DXzaP-nFv6FH9jf2/pub?gid=194544857&single=true&output=csv",
+    abastecimentos: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSurhYD5E2awXB7JULubDvz5-OVExEU4PNnRjLd9Frb3jVWItrZjfvAfrY-CO52DXzaP-nFv6FH9jf2/pub?gid=1342537533&single=true&output=csv"
+};
+
+function log(message, type = 'info') {
+    const logDiv = document.getElementById('migrationLog');
+    const timestamp = new Date().toLocaleTimeString('pt-BR');
+    const color = type === 'error' ? '#EF4444' : type === 'success' ? '#10B981' : '#60A5FA';
+    logDiv.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+    logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+function setStatus(id, message, type = 'info') {
+    const el = document.getElementById(id);
+    const color = type === 'error' ? 'var(--danger)' : type === 'success' ? 'var(--secondary)' : 'var(--warning)';
+    el.innerHTML = `<span style="color: ${color}">${message}</span>`;
+}
+
+async function fetchCSV(url) {
+    const response = await fetch(url);
+    const text = await response.text();
+    return Papa.parse(text, { header: true, skipEmptyLines: true }).data;
+}
+
+function parseCurrency(value) {
+    if (typeof value === 'number') return value;
+    if (!value || value === '-') return 0;
+    let clean = value.toString().replace('R$', '').trim().replaceAll('.', '').replace(',', '.');
+    let floatVal = parseFloat(clean);
+    return isNaN(floatVal) ? 0 : floatVal;
+}
+
+function parseDate(dateStr) {
+    if (!dateStr) return null;
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+    }
+    return dateStr;
+}
+
+function normalizePlate(plate) {
+    if (!plate) return '';
+    let clean = plate.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (clean.length > 7) clean = clean.substring(0, 7);
+    return clean;
+}
+
+function extractPlateFromText(text) {
+    if (!text) return '';
+    const match = text.match(/[A-Z]{3}[-]?[0-9][A-Z0-9][0-9]{2}/i);
+    if (match) return match[0].replace('-', '');
+    return text.split(' ')[0].replace(/[^A-Z0-9]/gi, '').substring(0, 7);
+}
+
+// Migrar Veículos
+async function migrarVeiculos() {
+    const btn = document.getElementById('btnVeiculos');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner"></i> Importando...';
+    setStatus('statusVeiculos', 'Buscando dados...', 'info');
+
+    try {
+        log('Iniciando migração de veículos...');
+        const data = await fetchCSV(SHEETS.frota);
+        log(`Encontrados ${data.length} registros na planilha`);
+
+        let imported = 0;
+        let errors = 0;
+
+        for (const row of data) {
+            const placa = row.Placa || extractPlateFromText(row['Placa'] || '');
+            if (!placa || placa.length < 5) continue;
+
+            try {
+                const existing = await VeiculosAPI.buscarPorPlaca(placa);
+                if (!existing) {
+                    await VeiculosAPI.criar({
+                        placa: placa,
+                        modelo: row.Modelo || row['Modelo'] || '',
+                        ano_modelo: row['Ano modelo'] || row['Ano'] || '',
+                        renavam: row.Renavam || '',
+                        ipva: parseCurrency(row['IPVA (último ano)'] || row['IPVA']),
+                        dpvat: parseCurrency(row['DPVAT pago?'] || '0'),
+                        proprietario: row.Proprietário || row['Proprietario'] || ''
+                    });
+                    imported++;
+                    log(`Veículo ${placa} importado com sucesso`, 'success');
+                } else {
+                    log(`Veículo ${placa} já existe, pulando...`, 'info');
+                }
+            } catch (e) {
+                errors++;
+                log(`Erro ao importar ${placa}: ${e.message}`, 'error');
+            }
+        }
+
+        setStatus('statusVeiculos', `Importados: ${imported} | Erros: ${errors}`, imported > 0 ? 'success' : 'error');
+        log(`Migração de veículos concluída: ${imported} importados, ${errors} erros`, 'success');
+    } catch (error) {
+        setStatus('statusVeiculos', 'Erro: ' + error.message, 'error');
+        log('Erro na migração de veículos: ' + error.message, 'error');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ph ph-upload"></i> Importar';
+}
+
+// Migrar Seguros
+async function migrarSeguros() {
+    const btn = document.getElementById('btnSeguros');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner"></i> Importando...';
+    setStatus('statusSeguros', 'Buscando dados...', 'info');
+
+    try {
+        log('Iniciando migração de seguros...');
+        const data = await fetchCSV(SHEETS.seguros);
+        log(`Encontrados ${data.length} registros na planilha`);
+
+        let imported = 0;
+        let errors = 0;
+
+        for (const row of data) {
+            const placa = extractPlateFromText(row.Placa || '');
+            if (!placa || placa.length < 5) continue;
+
+            try {
+                await SegurosAPI.criar({
+                    placa: placa,
+                    corretora: row.Corretora || '',
+                    seguradora: row.Seguradora || '',
+                    vencimento: parseDate(row.Vencimento),
+                    valor_seguro: parseCurrency(row['Valor Seguro'] || row['Valor'])
+                });
+                imported++;
+                log(`Seguro ${placa} importado com sucesso`, 'success');
+            } catch (e) {
+                errors++;
+                log(`Erro ao importar seguro ${placa}: ${e.message}`, 'error');
+            }
+        }
+
+        setStatus('statusSeguros', `Importados: ${imported} | Erros: ${errors}`, imported > 0 ? 'success' : 'error');
+        log(`Migração de seguros concluída: ${imported} importados, ${errors} erros`, 'success');
+    } catch (error) {
+        setStatus('statusSeguros', 'Erro: ' + error.message, 'error');
+        log('Erro na migração de seguros: ' + error.message, 'error');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ph ph-upload"></i> Importar';
+}
+
+// Migrar Manutenções
+async function migrarManutencoes() {
+    const btn = document.getElementById('btnManutencoes');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner"></i> Importando...';
+    setStatus('statusManutencoes', 'Buscando dados...', 'info');
+
+    try {
+        log('Iniciando migração de manutenções...');
+        const data = await fetchCSV(SHEETS.manutencoes);
+        log(`Encontrados ${data.length} registros na planilha`);
+
+        let imported = 0;
+        let errors = 0;
+
+        for (const row of data) {
+            const placa = extractPlateFromText(row.Placa || '');
+            if (!placa || placa.length < 5) continue;
+
+            try {
+                await ManutencoesAPI.criar({
+                    placa: placa,
+                    data: parseDate(row['Data da solicitação'] || row.Data),
+                    descricao: row['Descrição da manutenção'] || row['Descrição'] || '',
+                    mecanico: row.Mecânico || row.Oficina || '',
+                    valor: parseCurrency(row.Valor)
+                });
+                imported++;
+            } catch (e) {
+                errors++;
+            }
+        }
+
+        setStatus('statusManutencoes', `Importados: ${imported} | Erros: ${errors}`, imported > 0 ? 'success' : 'error');
+        log(`Migração de manutenções concluída: ${imported} importados, ${errors} erros`, 'success');
+    } catch (error) {
+        setStatus('statusManutencoes', 'Erro: ' + error.message, 'error');
+        log('Erro na migração de manutenções: ' + error.message, 'error');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ph ph-upload"></i> Importar';
+}
+
+// Migrar Sinistros
+async function migrarSinistros() {
+    const btn = document.getElementById('btnSinistros');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner"></i> Importando...';
+    setStatus('statusSinistros', 'Buscando dados...', 'info');
+
+    try {
+        log('Iniciando migração de sinistros...');
+        const data = await fetchCSV(SHEETS.sinistros);
+        log(`Encontrados ${data.length} registros na planilha`);
+
+        let imported = 0;
+        let errors = 0;
+
+        for (const row of data) {
+            const placa = extractPlateFromText(row.Placa || '');
+            if (!placa || placa.length < 5) continue;
+
+            try {
+                await SinistrosAPI.criar({
+                    placa: placa,
+                    data: parseDate(row['Data do sinistro'] || row.Data),
+                    descricao: row['Descrição do sinistro'] || row['Descrição'] || '',
+                    bo: row['B.O'] || row['BO'] || '',
+                    valor: parseCurrency(row.Valor)
+                });
+                imported++;
+            } catch (e) {
+                errors++;
+            }
+        }
+
+        setStatus('statusSinistros', `Importados: ${imported} | Erros: ${errors}`, imported > 0 ? 'success' : 'error');
+        log(`Migração de sinistros concluída: ${imported} importados, ${errors} erros`, 'success');
+    } catch (error) {
+        setStatus('statusSinistros', 'Erro: ' + error.message, 'error');
+        log('Erro na migração de sinistros: ' + error.message, 'error');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ph ph-upload"></i> Importar';
+}
+
+// Migrar Abastecimentos
+async function migrarAbastecimentos() {
+    const btn = document.getElementById('btnAbastecimentos');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner"></i> Importando...';
+    setStatus('statusAbastecimentos', 'Buscando dados...', 'info');
+
+    try {
+        log('Iniciando migração de abastecimentos...');
+        const data = await fetchCSV(SHEETS.abastecimentos);
+        log(`Encontrados ${data.length} registros na planilha`);
+
+        let imported = 0;
+        let errors = 0;
+
+        for (const row of data) {
+            const placa = extractPlateFromText(row.Placa || '');
+            if (!placa || placa.length < 5) continue;
+
+            try {
+                const litros = parseFloat((row.Litros || '0').replace(',', '.')) || 0;
+                const valorUnitario = parseCurrency(row['Valor Un. Litro'] || row['Valor Unitário']);
+                const valorTotal = parseCurrency(row.Valor || row['Valor Total']);
+
+                await AbastecimentosAPI.criar({
+                    placa: placa,
+                    data: parseDate(row.Data),
+                    litros: litros,
+                    valor_unitario: valorUnitario,
+                    valor_total: valorTotal || (litros * valorUnitario)
+                });
+                imported++;
+            } catch (e) {
+                errors++;
+            }
+        }
+
+        setStatus('statusAbastecimentos', `Importados: ${imported} | Erros: ${errors}`, imported > 0 ? 'success' : 'error');
+        log(`Migração de abastecimentos concluída: ${imported} importados, ${errors} erros`, 'success');
+    } catch (error) {
+        setStatus('statusAbastecimentos', 'Erro: ' + error.message, 'error');
+        log('Erro na migração de abastecimentos: ' + error.message, 'error');
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ph ph-upload"></i> Importar';
+}
+
+// Migrar Todos
+async function migrarTodos() {
+    log('=== INICIANDO MIGRAÇÃO COMPLETA ===', 'info');
+    await migrarVeiculos();
+    await migrarSeguros();
+    await migrarManutencoes();
+    await migrarSinistros();
+    await migrarAbastecimentos();
+    log('=== MIGRAÇÃO COMPLETA FINALIZADA ===', 'success');
+    Utils.showToast('Migração completa finalizada!', 'success');
+}
+</script>
+
+</body>
+</html>
