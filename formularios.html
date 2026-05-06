@@ -258,16 +258,16 @@
                             <input type="date" id="sinistroData" required>
                         </div>
                         <div class="form-group">
-                            <label for="sinistroBO">Número do B.O.</label>
-                            <input type="text" id="sinistroBO" placeholder="Boletim de ocorrência">
-                        </div>
-                        <div class="form-group">
                             <label for="sinistroValor">Valor (R$)</label>
                             <input type="number" id="sinistroValor" step="0.01" placeholder="0,00">
                         </div>
                         <div class="form-group" style="grid-column: span 2;">
                             <label for="sinistroDescricao">Descrição</label>
                             <textarea id="sinistroDescricao" rows="3" placeholder="Descreva o sinistro"></textarea>
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="sinistroBO">URL do B.O.</label>
+                            <input type="url" id="sinistroBO" placeholder="https://link-do-boletim.pdf">
                         </div>
                     </div>
                     <div class="form-actions">

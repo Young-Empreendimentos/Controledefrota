@@ -390,12 +390,15 @@ async function loadTableSinistros() {
         }
 
         data.forEach(item => {
+            const boLink = item.bo 
+                ? `<a href="${item.bo}" target="_blank" class="btn btn-sm btn-primary"><i class="ph ph-file-pdf"></i> Ver</a>` 
+                : '-';
             tbody.innerHTML += `
                 <tr>
                     <td>${Utils.formatDate(item.data)}</td>
                     <td><strong>${item.placa}</strong></td>
                     <td>${item.descricao ? (item.descricao.substring(0, 50) + (item.descricao.length > 50 ? '...' : '')) : '-'}</td>
-                    <td>${item.bo || '-'}</td>
+                    <td>${boLink}</td>
                     <td>${Utils.formatCurrency(item.valor)}</td>
                     <td class="actions">
                         <button class="btn btn-sm btn-secondary" onclick="editSinistro('${item.id}')">
