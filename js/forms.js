@@ -30,6 +30,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+// Alternar visibilidade do painel de formulário
+function toggleFormPanel(panelId) {
+    const panel = document.getElementById(panelId);
+    if (panel) {
+        panel.classList.toggle('hidden');
+    }
+}
+
+// Abrir painel de formulário (para edição)
+function openFormPanel(panelId) {
+    const panel = document.getElementById(panelId);
+    if (panel) {
+        panel.classList.remove('hidden');
+    }
+}
+
+// Fechar painel de formulário
+function closeFormPanel(panelId) {
+    const panel = document.getElementById(panelId);
+    if (panel) {
+        panel.classList.add('hidden');
+    }
+}
+
 // Carregar lista de veículos para os selects
 async function loadVeiculos() {
     try {
@@ -127,6 +151,7 @@ async function saveVeiculo(event) {
             Utils.showToast('Veículo cadastrado com sucesso!', 'success');
         }
         clearFormVeiculo();
+        closeFormPanel('veiculoFormPanel');
         await loadVeiculos();
         await loadTableVeiculos();
     } catch (error) {
@@ -146,6 +171,7 @@ async function editVeiculo(id) {
             document.getElementById('veiculoIPVA').value = item.ipva || '';
             document.getElementById('veiculoDPVAT').value = item.dpvat || '';
             document.getElementById('veiculoProprietario').value = item.proprietario || '';
+            openFormPanel('veiculoFormPanel');
             window.scrollTo({ top: 0, behavior: 'smooth' });
             Utils.showToast(`Editando veículo ${item.placa}`, 'info');
         } else {
@@ -238,6 +264,7 @@ async function saveSeguro(event) {
             Utils.showToast('Seguro cadastrado com sucesso!', 'success');
         }
         clearFormSeguro();
+        closeFormPanel('seguroFormPanel');
         await loadTableSeguros();
     } catch (error) {
         Utils.showToast('Erro ao salvar seguro: ' + error.message, 'error');
@@ -256,6 +283,7 @@ async function editSeguro(id) {
             document.getElementById('seguroValor').value = item.valor_seguro || '';
             document.getElementById('seguroUrlApolice').value = item.url_apolice || '';
             showForm('seguros');
+            openFormPanel('seguroFormPanel');
             window.scrollTo({ top: 0, behavior: 'smooth' });
             Utils.showToast(`Editando seguro - ${item.placa}`, 'info');
         } else {
@@ -343,6 +371,7 @@ async function saveManutencao(event) {
             Utils.showToast('Manutenção registrada com sucesso!', 'success');
         }
         clearFormManutencao();
+        closeFormPanel('manutencaoFormPanel');
         await loadTableManutencoes();
     } catch (error) {
         Utils.showToast('Erro ao salvar manutenção: ' + error.message, 'error');
@@ -360,6 +389,7 @@ async function editManutencao(id) {
             document.getElementById('manutencaoMecanico').value = item.mecanico || '';
             document.getElementById('manutencaoValor').value = item.valor || '';
             showForm('manutencoes');
+            openFormPanel('manutencaoFormPanel');
             window.scrollTo({ top: 0, behavior: 'smooth' });
             Utils.showToast(`Editando manutenção - ${item.placa}`, 'info');
         } else {
@@ -449,6 +479,7 @@ async function saveSinistro(event) {
             Utils.showToast('Sinistro registrado com sucesso!', 'success');
         }
         clearFormSinistro();
+        closeFormPanel('sinistroFormPanel');
         await loadTableSinistros();
     } catch (error) {
         Utils.showToast('Erro ao salvar sinistro: ' + error.message, 'error');
@@ -466,6 +497,7 @@ async function editSinistro(id) {
             document.getElementById('sinistroBO').value = item.bo || '';
             document.getElementById('sinistroValor').value = item.valor || '';
             showForm('sinistros');
+            openFormPanel('sinistroFormPanel');
             window.scrollTo({ top: 0, behavior: 'smooth' });
             Utils.showToast(`Editando sinistro - ${item.placa}`, 'info');
         } else {
@@ -552,6 +584,7 @@ async function saveAbastecimento(event) {
             Utils.showToast('Abastecimento registrado com sucesso!', 'success');
         }
         clearFormAbastecimento();
+        closeFormPanel('abastecimentoFormPanel');
         await loadTableAbastecimentos();
     } catch (error) {
         Utils.showToast('Erro ao salvar abastecimento: ' + error.message, 'error');
@@ -569,6 +602,7 @@ async function editAbastecimento(id) {
             document.getElementById('abastecimentoValorUnitario').value = item.valor_unitario || '';
             document.getElementById('abastecimentoValorTotal').value = item.valor_total || '';
             showForm('abastecimentos');
+            openFormPanel('abastecimentoFormPanel');
             window.scrollTo({ top: 0, behavior: 'smooth' });
             Utils.showToast(`Editando abastecimento - ${item.placa}`, 'info');
         } else {

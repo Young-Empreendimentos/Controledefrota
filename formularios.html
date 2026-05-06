@@ -65,50 +65,59 @@
         <div class="forms-content">
             <!-- Veículos -->
             <div id="form-veiculos" class="form-container">
-                <div class="form-title">
-                    <i class="ph ph-car"></i> Cadastro de Veículos
+                <div class="form-header-bar">
+                    <div class="form-title" style="margin-bottom: 0;">
+                        <i class="ph ph-car"></i> Veículos
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="toggleFormPanel('veiculoFormPanel')">
+                        <i class="ph ph-plus"></i> Cadastrar Veículo
+                    </button>
                 </div>
-                <form id="formVeiculo" onsubmit="saveVeiculo(event)">
-                    <input type="hidden" id="veiculoId">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="veiculoPlaca">Placa *</label>
-                            <input type="text" id="veiculoPlaca" required placeholder="ABC-1234">
+                
+                <div id="veiculoFormPanel" class="form-panel hidden">
+                    <form id="formVeiculo" onsubmit="saveVeiculo(event)">
+                        <input type="hidden" id="veiculoId">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="veiculoPlaca">Placa *</label>
+                                <input type="text" id="veiculoPlaca" required placeholder="ABC-1234">
+                            </div>
+                            <div class="form-group">
+                                <label for="veiculoModelo">Modelo</label>
+                                <input type="text" id="veiculoModelo" placeholder="Ex: Fiat Uno">
+                            </div>
+                            <div class="form-group">
+                                <label for="veiculoAno">Ano Modelo</label>
+                                <input type="text" id="veiculoAno" placeholder="Ex: 2020/2021">
+                            </div>
+                            <div class="form-group">
+                                <label for="veiculoRenavam">Renavam</label>
+                                <input type="text" id="veiculoRenavam" placeholder="Número do Renavam">
+                            </div>
+                            <div class="form-group">
+                                <label for="veiculoIPVA">IPVA (R$)</label>
+                                <input type="number" id="veiculoIPVA" step="0.01" placeholder="0,00">
+                            </div>
+                            <div class="form-group">
+                                <label for="veiculoDPVAT">DPVAT (R$)</label>
+                                <input type="number" id="veiculoDPVAT" step="0.01" placeholder="0,00">
+                            </div>
+                            <div class="form-group">
+                                <label for="veiculoProprietario">Proprietário</label>
+                                <input type="text" id="veiculoProprietario" placeholder="Nome do proprietário">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="veiculoModelo">Modelo</label>
-                            <input type="text" id="veiculoModelo" placeholder="Ex: Fiat Uno">
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ph ph-floppy-disk"></i> Salvar
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="toggleFormPanel('veiculoFormPanel'); clearFormVeiculo()">
+                                <i class="ph ph-x"></i> Cancelar
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label for="veiculoAno">Ano Modelo</label>
-                            <input type="text" id="veiculoAno" placeholder="Ex: 2020/2021">
-                        </div>
-                        <div class="form-group">
-                            <label for="veiculoRenavam">Renavam</label>
-                            <input type="text" id="veiculoRenavam" placeholder="Número do Renavam">
-                        </div>
-                        <div class="form-group">
-                            <label for="veiculoIPVA">IPVA (R$)</label>
-                            <input type="number" id="veiculoIPVA" step="0.01" placeholder="0,00">
-                        </div>
-                        <div class="form-group">
-                            <label for="veiculoDPVAT">DPVAT (R$)</label>
-                            <input type="number" id="veiculoDPVAT" step="0.01" placeholder="0,00">
-                        </div>
-                        <div class="form-group">
-                            <label for="veiculoProprietario">Proprietário</label>
-                            <input type="text" id="veiculoProprietario" placeholder="Nome do proprietário">
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="ph ph-floppy-disk"></i> Salvar
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="clearFormVeiculo()">
-                            <i class="ph ph-eraser"></i> Limpar
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
+                
                 <div class="data-table-container">
                     <table class="data-table" id="tableVeiculos">
                         <thead>
@@ -128,46 +137,55 @@
 
             <!-- Seguros -->
             <div id="form-seguros" class="form-container hidden">
-                <div class="form-title">
-                    <i class="ph ph-shield-check"></i> Cadastro de Seguros
+                <div class="form-header-bar">
+                    <div class="form-title" style="margin-bottom: 0;">
+                        <i class="ph ph-shield-check"></i> Seguros
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="toggleFormPanel('seguroFormPanel')">
+                        <i class="ph ph-plus"></i> Cadastrar Seguro
+                    </button>
                 </div>
-                <form id="formSeguro" onsubmit="saveSeguro(event)">
-                    <input type="hidden" id="seguroId">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="seguroPlaca">Veículo (Placa) *</label>
-                            <select id="seguroPlaca" required></select>
+                
+                <div id="seguroFormPanel" class="form-panel hidden">
+                    <form id="formSeguro" onsubmit="saveSeguro(event)">
+                        <input type="hidden" id="seguroId">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="seguroPlaca">Veículo (Placa) *</label>
+                                <select id="seguroPlaca" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="seguroCorretora">Corretora</label>
+                                <input type="text" id="seguroCorretora" placeholder="Nome da corretora">
+                            </div>
+                            <div class="form-group">
+                                <label for="seguroSeguradora">Seguradora</label>
+                                <input type="text" id="seguroSeguradora" placeholder="Nome da seguradora">
+                            </div>
+                            <div class="form-group">
+                                <label for="seguroVencimento">Vencimento</label>
+                                <input type="date" id="seguroVencimento">
+                            </div>
+                            <div class="form-group">
+                                <label for="seguroValor">Valor do Seguro (R$)</label>
+                                <input type="number" id="seguroValor" step="0.01" placeholder="0,00">
+                            </div>
+                            <div class="form-group" style="grid-column: span 2;">
+                                <label for="seguroUrlApolice">URL da Apólice</label>
+                                <input type="url" id="seguroUrlApolice" placeholder="https://link-do-documento.pdf">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="seguroCorretora">Corretora</label>
-                            <input type="text" id="seguroCorretora" placeholder="Nome da corretora">
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ph ph-floppy-disk"></i> Salvar
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="toggleFormPanel('seguroFormPanel'); clearFormSeguro()">
+                                <i class="ph ph-x"></i> Cancelar
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label for="seguroSeguradora">Seguradora</label>
-                            <input type="text" id="seguroSeguradora" placeholder="Nome da seguradora">
-                        </div>
-                        <div class="form-group">
-                            <label for="seguroVencimento">Vencimento</label>
-                            <input type="date" id="seguroVencimento">
-                        </div>
-                        <div class="form-group">
-                            <label for="seguroValor">Valor do Seguro (R$)</label>
-                            <input type="number" id="seguroValor" step="0.01" placeholder="0,00">
-                        </div>
-                        <div class="form-group" style="grid-column: span 2;">
-                            <label for="seguroUrlApolice">URL da Apólice</label>
-                            <input type="url" id="seguroUrlApolice" placeholder="https://link-do-documento.pdf">
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="ph ph-floppy-disk"></i> Salvar
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="clearFormSeguro()">
-                            <i class="ph ph-eraser"></i> Limpar
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
+                
                 <div class="data-table-container">
                     <table class="data-table" id="tableSeguros">
                         <thead>
@@ -188,42 +206,51 @@
 
             <!-- Manutenções -->
             <div id="form-manutencoes" class="form-container hidden">
-                <div class="form-title">
-                    <i class="ph ph-wrench"></i> Registro de Manutenções
+                <div class="form-header-bar">
+                    <div class="form-title" style="margin-bottom: 0;">
+                        <i class="ph ph-wrench"></i> Manutenções
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="toggleFormPanel('manutencaoFormPanel')">
+                        <i class="ph ph-plus"></i> Registrar Manutenção
+                    </button>
                 </div>
-                <form id="formManutencao" onsubmit="saveManutencao(event)">
-                    <input type="hidden" id="manutencaoId">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="manutencaoPlaca">Veículo (Placa) *</label>
-                            <select id="manutencaoPlaca" required></select>
+                
+                <div id="manutencaoFormPanel" class="form-panel hidden">
+                    <form id="formManutencao" onsubmit="saveManutencao(event)">
+                        <input type="hidden" id="manutencaoId">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="manutencaoPlaca">Veículo (Placa) *</label>
+                                <select id="manutencaoPlaca" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="manutencaoData">Data *</label>
+                                <input type="date" id="manutencaoData" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="manutencaoMecanico">Mecânico/Oficina</label>
+                                <input type="text" id="manutencaoMecanico" placeholder="Nome do mecânico ou oficina">
+                            </div>
+                            <div class="form-group">
+                                <label for="manutencaoValor">Valor (R$)</label>
+                                <input type="number" id="manutencaoValor" step="0.01" placeholder="0,00">
+                            </div>
+                            <div class="form-group" style="grid-column: span 2;">
+                                <label for="manutencaoDescricao">Descrição</label>
+                                <textarea id="manutencaoDescricao" rows="3" placeholder="Descreva a manutenção realizada"></textarea>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="manutencaoData">Data *</label>
-                            <input type="date" id="manutencaoData" required>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ph ph-floppy-disk"></i> Salvar
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="toggleFormPanel('manutencaoFormPanel'); clearFormManutencao()">
+                                <i class="ph ph-x"></i> Cancelar
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label for="manutencaoMecanico">Mecânico/Oficina</label>
-                            <input type="text" id="manutencaoMecanico" placeholder="Nome do mecânico ou oficina">
-                        </div>
-                        <div class="form-group">
-                            <label for="manutencaoValor">Valor (R$)</label>
-                            <input type="number" id="manutencaoValor" step="0.01" placeholder="0,00">
-                        </div>
-                        <div class="form-group" style="grid-column: span 2;">
-                            <label for="manutencaoDescricao">Descrição</label>
-                            <textarea id="manutencaoDescricao" rows="3" placeholder="Descreva a manutenção realizada"></textarea>
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="ph ph-floppy-disk"></i> Salvar
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="clearFormManutencao()">
-                            <i class="ph ph-eraser"></i> Limpar
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
+                
                 <div class="data-table-container">
                     <table class="data-table" id="tableManutencoes">
                         <thead>
@@ -243,42 +270,51 @@
 
             <!-- Sinistros -->
             <div id="form-sinistros" class="form-container hidden">
-                <div class="form-title">
-                    <i class="ph ph-warning-octagon"></i> Registro de Sinistros
+                <div class="form-header-bar">
+                    <div class="form-title" style="margin-bottom: 0;">
+                        <i class="ph ph-warning-octagon"></i> Sinistros
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="toggleFormPanel('sinistroFormPanel')">
+                        <i class="ph ph-plus"></i> Registrar Sinistro
+                    </button>
                 </div>
-                <form id="formSinistro" onsubmit="saveSinistro(event)">
-                    <input type="hidden" id="sinistroId">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="sinistroPlaca">Veículo (Placa) *</label>
-                            <select id="sinistroPlaca" required></select>
+                
+                <div id="sinistroFormPanel" class="form-panel hidden">
+                    <form id="formSinistro" onsubmit="saveSinistro(event)">
+                        <input type="hidden" id="sinistroId">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="sinistroPlaca">Veículo (Placa) *</label>
+                                <select id="sinistroPlaca" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="sinistroData">Data *</label>
+                                <input type="date" id="sinistroData" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="sinistroValor">Valor (R$)</label>
+                                <input type="number" id="sinistroValor" step="0.01" placeholder="0,00">
+                            </div>
+                            <div class="form-group" style="grid-column: span 2;">
+                                <label for="sinistroDescricao">Descrição</label>
+                                <textarea id="sinistroDescricao" rows="3" placeholder="Descreva o sinistro"></textarea>
+                            </div>
+                            <div class="form-group" style="grid-column: span 2;">
+                                <label for="sinistroBO">URL do B.O.</label>
+                                <input type="url" id="sinistroBO" placeholder="https://link-do-boletim.pdf">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="sinistroData">Data *</label>
-                            <input type="date" id="sinistroData" required>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ph ph-floppy-disk"></i> Salvar
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="toggleFormPanel('sinistroFormPanel'); clearFormSinistro()">
+                                <i class="ph ph-x"></i> Cancelar
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label for="sinistroValor">Valor (R$)</label>
-                            <input type="number" id="sinistroValor" step="0.01" placeholder="0,00">
-                        </div>
-                        <div class="form-group" style="grid-column: span 2;">
-                            <label for="sinistroDescricao">Descrição</label>
-                            <textarea id="sinistroDescricao" rows="3" placeholder="Descreva o sinistro"></textarea>
-                        </div>
-                        <div class="form-group" style="grid-column: span 2;">
-                            <label for="sinistroBO">URL do B.O.</label>
-                            <input type="url" id="sinistroBO" placeholder="https://link-do-boletim.pdf">
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="ph ph-floppy-disk"></i> Salvar
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="clearFormSinistro()">
-                            <i class="ph ph-eraser"></i> Limpar
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
+                
                 <div class="data-table-container">
                     <table class="data-table" id="tableSinistros">
                         <thead>
@@ -298,42 +334,51 @@
 
             <!-- Abastecimentos -->
             <div id="form-abastecimentos" class="form-container hidden">
-                <div class="form-title">
-                    <i class="ph ph-gas-pump"></i> Registro de Abastecimentos
+                <div class="form-header-bar">
+                    <div class="form-title" style="margin-bottom: 0;">
+                        <i class="ph ph-gas-pump"></i> Abastecimentos
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="toggleFormPanel('abastecimentoFormPanel')">
+                        <i class="ph ph-plus"></i> Registrar Abastecimento
+                    </button>
                 </div>
-                <form id="formAbastecimento" onsubmit="saveAbastecimento(event)">
-                    <input type="hidden" id="abastecimentoId">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="abastecimentoPlaca">Veículo (Placa) *</label>
-                            <select id="abastecimentoPlaca" required></select>
+                
+                <div id="abastecimentoFormPanel" class="form-panel hidden">
+                    <form id="formAbastecimento" onsubmit="saveAbastecimento(event)">
+                        <input type="hidden" id="abastecimentoId">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="abastecimentoPlaca">Veículo (Placa) *</label>
+                                <select id="abastecimentoPlaca" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="abastecimentoData">Data *</label>
+                                <input type="date" id="abastecimentoData" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="abastecimentoLitros">Litros</label>
+                                <input type="number" id="abastecimentoLitros" step="0.01" placeholder="0,00" oninput="calcularTotal()">
+                            </div>
+                            <div class="form-group">
+                                <label for="abastecimentoValorUnitario">Valor/Litro (R$)</label>
+                                <input type="number" id="abastecimentoValorUnitario" step="0.01" placeholder="0,00" oninput="calcularTotal()">
+                            </div>
+                            <div class="form-group">
+                                <label for="abastecimentoValorTotal">Valor Total (R$)</label>
+                                <input type="number" id="abastecimentoValorTotal" step="0.01" placeholder="0,00">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="abastecimentoData">Data *</label>
-                            <input type="date" id="abastecimentoData" required>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ph ph-floppy-disk"></i> Salvar
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="toggleFormPanel('abastecimentoFormPanel'); clearFormAbastecimento()">
+                                <i class="ph ph-x"></i> Cancelar
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label for="abastecimentoLitros">Litros</label>
-                            <input type="number" id="abastecimentoLitros" step="0.01" placeholder="0,00" oninput="calcularTotal()">
-                        </div>
-                        <div class="form-group">
-                            <label for="abastecimentoValorUnitario">Valor/Litro (R$)</label>
-                            <input type="number" id="abastecimentoValorUnitario" step="0.01" placeholder="0,00" oninput="calcularTotal()">
-                        </div>
-                        <div class="form-group">
-                            <label for="abastecimentoValorTotal">Valor Total (R$)</label>
-                            <input type="number" id="abastecimentoValorTotal" step="0.01" placeholder="0,00">
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="ph ph-floppy-disk"></i> Salvar
-                        </button>
-                        <button type="button" class="btn btn-secondary" onclick="clearFormAbastecimento()">
-                            <i class="ph ph-eraser"></i> Limpar
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
+                
                 <div class="data-table-container">
                     <table class="data-table" id="tableAbastecimentos">
                         <thead>
