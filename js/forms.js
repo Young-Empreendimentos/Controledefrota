@@ -180,11 +180,14 @@ async function loadTableSeguros() {
         tbody.innerHTML = '';
 
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum seguro cadastrado</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Nenhum seguro cadastrado</td></tr>';
             return;
         }
 
         data.forEach(item => {
+            const apoliceLink = item.url_apolice 
+                ? `<a href="${item.url_apolice}" target="_blank" class="btn btn-sm btn-primary"><i class="ph ph-file-pdf"></i> Ver</a>` 
+                : '-';
             tbody.innerHTML += `
                 <tr>
                     <td><strong>${item.placa}</strong></td>
@@ -192,6 +195,7 @@ async function loadTableSeguros() {
                     <td>${item.seguradora || '-'}</td>
                     <td>${Utils.formatDate(item.vencimento)}</td>
                     <td>${Utils.formatCurrency(item.valor_seguro)}</td>
+                    <td>${apoliceLink}</td>
                     <td class="actions">
                         <button class="btn btn-sm btn-secondary" onclick="editSeguro('${item.id}')">
                             <i class="ph ph-pencil"></i>
@@ -217,7 +221,8 @@ async function saveSeguro(event) {
         corretora: document.getElementById('seguroCorretora').value,
         seguradora: document.getElementById('seguroSeguradora').value,
         vencimento: document.getElementById('seguroVencimento').value || null,
-        valor_seguro: parseFloat(document.getElementById('seguroValor').value) || 0
+        valor_seguro: parseFloat(document.getElementById('seguroValor').value) || 0,
+        url_apolice: document.getElementById('seguroUrlApolice').value || null
     };
 
     try {
@@ -245,6 +250,7 @@ async function editSeguro(id) {
             document.getElementById('seguroSeguradora').value = item.seguradora || '';
             document.getElementById('seguroVencimento').value = item.vencimento || '';
             document.getElementById('seguroValor').value = item.valor_seguro || '';
+            document.getElementById('seguroUrlApolice').value = item.url_apolice || '';
             showForm('seguros');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -256,6 +262,7 @@ async function editSeguro(id) {
 function clearFormSeguro() {
     document.getElementById('formSeguro').reset();
     document.getElementById('seguroId').value = '';
+    document.getElementById('seguroUrlApolice').value = '';
 }
 
 async function deleteSeguro(id) {

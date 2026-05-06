@@ -25,9 +25,13 @@ CREATE TABLE IF NOT EXISTS frota_seguros (
     seguradora TEXT,
     vencimento DATE,
     valor_seguro NUMERIC DEFAULT 0,
+    url_apolice TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Para adicionar a coluna em tabela existente:
+-- ALTER TABLE frota_seguros ADD COLUMN IF NOT EXISTS url_apolice TEXT;
 
 -- 3. Tabela de Manutenções
 CREATE TABLE IF NOT EXISTS frota_manutencoes (
