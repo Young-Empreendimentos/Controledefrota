@@ -312,13 +312,22 @@ async function carregarVeiculos() {
         });
 
         // Carregar KM dos veículos
+        await carregarKmVeiculos();
+    } catch (error) {
+        console.error('Erro ao carregar veículos:', error);
+        Utils.showToast('Erro ao carregar veículos', 'error');
+    }
+}
+
+async function carregarKmVeiculos() {
+    try {
         const kmData = await VeiculosKmAPI.listar();
+        veiculosKmData = {};
         kmData.forEach(km => {
             veiculosKmData[km.placa] = km;
         });
     } catch (error) {
-        console.error('Erro ao carregar veículos:', error);
-        Utils.showToast('Erro ao carregar veículos', 'error');
+        console.error('Erro ao carregar KM:', error);
     }
 }
 
@@ -340,18 +349,19 @@ async function carregarRevisoes() {
     document.getElementById('infoPlaca').textContent = placa;
     document.getElementById('veiculoDetails').style.display = 'flex';
 
-    // Carregar KM atual
-    const kmInfo = veiculosKmData[placa];
-    if (kmInfo) {
-        document.getElementById('kmAtual').value = kmInfo.km_atual || '';
-        document.getElementById('dataAtualizacao').value = kmInfo.data_atualizacao || '';
-    } else {
-        document.getElementById('kmAtual').value = '';
-        document.getElementById('dataAtualizacao').value = new Date().toISOString().split('T')[0];
-    }
-
     try {
+        // Carregar revisões primeiro
         revisoesData = await RevisoesAPI.buscarPorPlaca(placa);
+        
+        // Carregar KM atual do banco
+        const kmInfo = veiculosKmData[placa];
+        if (kmInfo) {
+            document.getElementById('kmAtual').value = kmInfo.km_atual || '';
+            document.getElementById('dataAtualizacao').value = kmInfo.data_atualizacao || '';
+        } else {
+            document.getElementById('kmAtual').value = '';
+            document.getElementById('dataAtualizacao').value = new Date().toISOString().split('T')[0];
+        }
         
         document.getElementById('noVeiculoMessage').style.display = 'none';
         document.getElementById('tableRevisoes').style.display = 'table';
