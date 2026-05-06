@@ -69,6 +69,28 @@ CREATE TABLE IF NOT EXISTS frota_abastecimentos (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 6. Tabela de Revisões Programadas
+CREATE TABLE IF NOT EXISTS frota_revisoes (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    placa TEXT NOT NULL,
+    item_servico TEXT NOT NULL,
+    periodicidade_km INTEGER,
+    ultima_manutencao_km INTEGER,
+    data_ultima_manutencao DATE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 7. Tabela de Km Atual dos Veículos
+CREATE TABLE IF NOT EXISTS frota_veiculos_km (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    placa TEXT NOT NULL UNIQUE,
+    km_atual INTEGER DEFAULT 0,
+    data_atualizacao DATE DEFAULT CURRENT_DATE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- =============================================
 -- Índices para melhor performance
 -- =============================================
@@ -81,6 +103,8 @@ CREATE INDEX IF NOT EXISTS idx_frota_sinistros_placa ON frota_sinistros(placa);
 CREATE INDEX IF NOT EXISTS idx_frota_sinistros_data ON frota_sinistros(data);
 CREATE INDEX IF NOT EXISTS idx_frota_abastecimentos_placa ON frota_abastecimentos(placa);
 CREATE INDEX IF NOT EXISTS idx_frota_abastecimentos_data ON frota_abastecimentos(data);
+CREATE INDEX IF NOT EXISTS idx_frota_revisoes_placa ON frota_revisoes(placa);
+CREATE INDEX IF NOT EXISTS idx_frota_veiculos_km_placa ON frota_veiculos_km(placa);
 
 -- =============================================
 -- Desabilitar RLS para acesso público (sem autenticação)
@@ -91,6 +115,8 @@ ALTER TABLE frota_seguros ENABLE ROW LEVEL SECURITY;
 ALTER TABLE frota_manutencoes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE frota_sinistros ENABLE ROW LEVEL SECURITY;
 ALTER TABLE frota_abastecimentos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE frota_revisoes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE frota_veiculos_km ENABLE ROW LEVEL SECURITY;
 
 -- Políticas para permitir acesso público (anon)
 CREATE POLICY "Allow public read frota_veiculos" ON frota_veiculos FOR SELECT USING (true);
@@ -118,6 +144,16 @@ CREATE POLICY "Allow public insert frota_abastecimentos" ON frota_abastecimentos
 CREATE POLICY "Allow public update frota_abastecimentos" ON frota_abastecimentos FOR UPDATE USING (true);
 CREATE POLICY "Allow public delete frota_abastecimentos" ON frota_abastecimentos FOR DELETE USING (true);
 
+CREATE POLICY "Allow public read frota_revisoes" ON frota_revisoes FOR SELECT USING (true);
+CREATE POLICY "Allow public insert frota_revisoes" ON frota_revisoes FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update frota_revisoes" ON frota_revisoes FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete frota_revisoes" ON frota_revisoes FOR DELETE USING (true);
+
+CREATE POLICY "Allow public read frota_veiculos_km" ON frota_veiculos_km FOR SELECT USING (true);
+CREATE POLICY "Allow public insert frota_veiculos_km" ON frota_veiculos_km FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update frota_veiculos_km" ON frota_veiculos_km FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete frota_veiculos_km" ON frota_veiculos_km FOR DELETE USING (true);
+
 -- =============================================
 -- Função para atualizar updated_at automaticamente
 -- =============================================
@@ -136,3 +172,5 @@ CREATE TRIGGER update_frota_seguros_updated_at BEFORE UPDATE ON frota_seguros FO
 CREATE TRIGGER update_frota_manutencoes_updated_at BEFORE UPDATE ON frota_manutencoes FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_frota_sinistros_updated_at BEFORE UPDATE ON frota_sinistros FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_frota_abastecimentos_updated_at BEFORE UPDATE ON frota_abastecimentos FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_frota_revisoes_updated_at BEFORE UPDATE ON frota_revisoes FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_frota_veiculos_km_updated_at BEFORE UPDATE ON frota_veiculos_km FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

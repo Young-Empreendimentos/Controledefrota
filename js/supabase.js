@@ -239,6 +239,48 @@ const AbastecimentosAPI = {
     }
 };
 
+const RevisoesAPI = {
+    async listar() {
+        return await SupabaseClient.getAll('frota_revisoes', 'item_servico', true);
+    },
+    async buscarPorPlaca(placa) {
+        return await SupabaseClient.getByField('frota_revisoes', 'placa', placa);
+    },
+    async criar(dados) {
+        return await SupabaseClient.insert('frota_revisoes', dados);
+    },
+    async atualizar(id, dados) {
+        return await SupabaseClient.update('frota_revisoes', id, dados);
+    },
+    async deletar(id) {
+        return await SupabaseClient.delete('frota_revisoes', id);
+    }
+};
+
+const VeiculosKmAPI = {
+    async listar() {
+        return await SupabaseClient.getAll('frota_veiculos_km', 'placa', true);
+    },
+    async buscarPorPlaca(placa) {
+        const results = await SupabaseClient.getByField('frota_veiculos_km', 'placa', placa);
+        return results[0] || null;
+    },
+    async criar(dados) {
+        return await SupabaseClient.insert('frota_veiculos_km', dados);
+    },
+    async atualizar(id, dados) {
+        return await SupabaseClient.update('frota_veiculos_km', id, dados);
+    },
+    async upsert(placa, dados) {
+        const existing = await this.buscarPorPlaca(placa);
+        if (existing) {
+            return await this.atualizar(existing.id, dados);
+        } else {
+            return await this.criar({ placa, ...dados });
+        }
+    }
+};
+
 // Funções de utilidade
 const Utils = {
     formatCurrency(value) {

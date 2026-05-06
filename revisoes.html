@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revisões Programadas | Young Empreendimentos - Controle de Frota</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23FE5009' width='100' height='100' rx='15'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'%3EY%3C/text%3E%3C/svg%3E">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        .revisoes-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .veiculo-select-container {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+        .veiculo-info-header {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto;
+            gap: 24px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .veiculo-info-box {
+            background: var(--primary-light);
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .veiculo-info-box label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 4px;
+        }
+        .veiculo-info-box .value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .veiculo-info-box input {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary);
+            border: none;
+            background: transparent;
+            text-align: center;
+            width: 120px;
+        }
+        .veiculo-info-box input:focus {
+            outline: 2px solid var(--primary);
+            border-radius: 4px;
+        }
+        .veiculo-details {
+            display: flex;
+            gap: 24px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        .veiculo-details span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .veiculo-details strong {
+            color: var(--text-main);
+        }
+        .revisoes-table-container {
+            background: var(--bg-card);
+            padding: 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+        .revisoes-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .revisoes-table th {
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .revisoes-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #E5E7EB;
+            font-size: 0.9rem;
+        }
+        .revisoes-table tr:hover {
+            background: #F9FAFB;
+        }
+        .revisoes-table input,
+        .revisoes-table select {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            background: transparent;
+        }
+        .revisoes-table input:hover,
+        .revisoes-table select:hover {
+            border-color: #E5E7EB;
+            background: white;
+        }
+        .revisoes-table input:focus,
+        .revisoes-table select:focus {
+            border-color: var(--primary);
+            background: white;
+            outline: none;
+        }
+        .status-ok {
+            background: #D1FAE5;
+            color: #065F46;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            display: inline-block;
+        }
+        .status-revisar {
+            background: #FEE2E2;
+            color: #991B1B;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            display: inline-block;
+        }
+        .btn-add-item {
+            margin-top: 16px;
+        }
+        .btn-delete-row {
+            background: none;
+            border: none;
+            color: #EF4444;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+        }
+        .btn-delete-row:hover {
+            background: #FEE2E2;
+        }
+        .table-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+        }
+        .no-data-message {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+<div id="toast-container" class="toast-container"></div>
+
+<!-- Header da Empresa -->
+<div class="company-header">
+    <div class="company-logo">
+        <div class="company-logo-text"><span>Young</span> Empreendimentos</div>
+    </div>
+    <div class="company-subtitle">Controle de Frota</div>
+</div>
+
+<div class="revisoes-container">
+    <!-- Navigation -->
+    <div class="nav-header">
+        <div class="app-title" style="margin-bottom: 0;">
+            <i class="ph ph-wrench" style="font-size: 1.5em;"></i>
+            Revisões Programadas
+        </div>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">
+                <i class="ph ph-chart-line"></i> Dashboard
+            </a>
+            <a href="formularios.html" class="nav-link">
+                <i class="ph ph-pencil-simple"></i> Formulários
+            </a>
+            <a href="revisoes.html" class="nav-link active">
+                <i class="ph ph-wrench"></i> Revisões
+            </a>
+        </div>
+    </div>
+
+    <!-- Seleção de Veículo -->
+    <div class="veiculo-select-container">
+        <div class="veiculo-info-header">
+            <div class="form-group" style="margin: 0;">
+                <label for="selectVeiculo">Selecione o Veículo</label>
+                <select id="selectVeiculo" onchange="carregarRevisoes()">
+                    <option value="">-- Selecione --</option>
+                </select>
+            </div>
+            <div class="veiculo-info-box">
+                <label>KM Atual</label>
+                <input type="number" id="kmAtual" placeholder="0" onchange="atualizarKm()">
+            </div>
+            <div class="veiculo-info-box">
+                <label>Data da Atualização</label>
+                <input type="date" id="dataAtualizacao" onchange="atualizarKm()">
+            </div>
+            <div class="veiculo-info-box">
+                <label>Km da Última Revisão</label>
+                <span class="value" id="kmUltimaRevisao">-</span>
+            </div>
+        </div>
+        <div class="veiculo-details" id="veiculoDetails" style="display: none;">
+            <span><i class="ph ph-car"></i> Veículo: <strong id="infoModelo">-</strong></span>
+            <span><i class="ph ph-identification-card"></i> Placa: <strong id="infoPlaca">-</strong></span>
+        </div>
+    </div>
+
+    <!-- Tabela de Revisões -->
+    <div class="revisoes-table-container">
+        <div class="form-header-bar">
+            <div class="form-title" style="margin-bottom: 0;">
+                <i class="ph ph-list-checks"></i> Itens de Revisão
+            </div>
+            <button type="button" class="btn btn-primary" onclick="adicionarItemRevisao()">
+                <i class="ph ph-plus"></i> Adicionar Item
+            </button>
+        </div>
+
+        <div id="noVeiculoMessage" class="no-data-message">
+            <i class="ph ph-car" style="font-size: 3rem; opacity: 0.3;"></i>
+            <p>Selecione um veículo para visualizar as revisões programadas</p>
+        </div>
+
+        <table class="revisoes-table" id="tableRevisoes" style="display: none;">
+            <thead>
+                <tr>
+                    <th style="width: 200px;">Item ou Serviço</th>
+                    <th style="width: 120px;">Periodicidade (KM)</th>
+                    <th style="width: 140px;">Última Manutenção (KM)</th>
+                    <th style="width: 140px;">Data da Última Manutenção</th>
+                    <th style="width: 80px;">Status</th>
+                    <th style="width: 120px;">Próxima Revisão (KM)</th>
+                    <th style="width: 50px;"></th>
+                </tr>
+            </thead>
+            <tbody id="tbodyRevisoes"></tbody>
+        </table>
+
+        <div class="table-actions" id="tableActions" style="display: none;">
+            <span style="color: var(--text-muted); font-size: 0.85rem;">
+                <i class="ph ph-info"></i> Clique nas células para editar os valores
+            </span>
+            <button type="button" class="btn btn-primary" onclick="salvarTodasRevisoes()">
+                <i class="ph ph-floppy-disk"></i> Salvar Alterações
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="js/supabase.js"></script>
+<script>
+let veiculoSelecionado = null;
+let revisoesData = [];
+let veiculosData = [];
+let veiculosKmData = {};
+
+const ITENS_REVISAO_PADRAO = [
+    'Geometria e balanceamento',
+    'Correia do alternador',
+    'Correia dentada',
+    'Correia do compressor do ar-condicionado',
+    'Correia poly-v (bomba d\'água)',
+    'Filtro de ar motor',
+    'Filtro de cabine (antipólen)',
+    'Filtro de combustível',
+    'Óleo lubrificante',
+    'Filtro de óleo*',
+    'Fluido das transmissões',
+    'Fluido de freio (óleo do freio)',
+    'Limpeza do ar condicionado',
+    'Limpeza do sistema de arrefecimento',
+    'Líquido de arrefecimento',
+    'Pneus',
+    'Velas',
+    'Freios',
+    'Sistema de Injeção',
+    'Sinalização',
+    'Amortecedor'
+];
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await carregarVeiculos();
+});
+
+async function carregarVeiculos() {
+    try {
+        veiculosData = await VeiculosAPI.listar();
+        const select = document.getElementById('selectVeiculo');
+        select.innerHTML = '<option value="">-- Selecione --</option>';
+        veiculosData.forEach(v => {
+            const option = document.createElement('option');
+            option.value = v.placa;
+            option.textContent = `${v.placa} - ${v.modelo || 'Sem modelo'}`;
+            select.appendChild(option);
+        });
+
+        // Carregar KM dos veículos
+        const kmData = await VeiculosKmAPI.listar();
+        kmData.forEach(km => {
+            veiculosKmData[km.placa] = km;
+        });
+    } catch (error) {
+        console.error('Erro ao carregar veículos:', error);
+        Utils.showToast('Erro ao carregar veículos', 'error');
+    }
+}
+
+async function carregarRevisoes() {
+    const placa = document.getElementById('selectVeiculo').value;
+    
+    if (!placa) {
+        document.getElementById('noVeiculoMessage').style.display = 'block';
+        document.getElementById('tableRevisoes').style.display = 'none';
+        document.getElementById('tableActions').style.display = 'none';
+        document.getElementById('veiculoDetails').style.display = 'none';
+        return;
+    }
+
+    veiculoSelecionado = veiculosData.find(v => v.placa === placa);
+    
+    // Mostrar informações do veículo
+    document.getElementById('infoModelo').textContent = veiculoSelecionado?.modelo || '-';
+    document.getElementById('infoPlaca').textContent = placa;
+    document.getElementById('veiculoDetails').style.display = 'flex';
+
+    // Carregar KM atual
+    const kmInfo = veiculosKmData[placa];
+    if (kmInfo) {
+        document.getElementById('kmAtual').value = kmInfo.km_atual || '';
+        document.getElementById('dataAtualizacao').value = kmInfo.data_atualizacao || '';
+    } else {
+        document.getElementById('kmAtual').value = '';
+        document.getElementById('dataAtualizacao').value = new Date().toISOString().split('T')[0];
+    }
+
+    try {
+        revisoesData = await RevisoesAPI.buscarPorPlaca(placa);
+        
+        document.getElementById('noVeiculoMessage').style.display = 'none';
+        document.getElementById('tableRevisoes').style.display = 'table';
+        document.getElementById('tableActions').style.display = 'flex';
+        
+        renderizarTabela();
+        calcularKmUltimaRevisao();
+    } catch (error) {
+        console.error('Erro ao carregar revisões:', error);
+        Utils.showToast('Erro ao carregar revisões', 'error');
+    }
+}
+
+function renderizarTabela() {
+    const tbody = document.getElementById('tbodyRevisoes');
+    const kmAtual = parseInt(document.getElementById('kmAtual').value) || 0;
+    
+    tbody.innerHTML = '';
+    
+    if (revisoesData.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                    Nenhum item de revisão cadastrado. Clique em "Adicionar Item" para começar.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    revisoesData.forEach((item, index) => {
+        const ultimaManutKm = item.ultima_manutencao_km || 0;
+        const periodicidade = item.periodicidade_km || 0;
+        const kmRodados = kmAtual - ultimaManutKm;
+        const status = periodicidade === 0 ? '' : (kmRodados <= periodicidade ? 'OK' : 'Revisar');
+        const proximaRevisao = ultimaManutKm + periodicidade;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                <input type="text" value="${item.item_servico || ''}" 
+                       onchange="atualizarCampo(${index}, 'item_servico', this.value)">
+            </td>
+            <td>
+                <input type="number" value="${item.periodicidade_km || ''}" 
+                       onchange="atualizarCampo(${index}, 'periodicidade_km', this.value)"
+                       placeholder="KM">
+            </td>
+            <td>
+                <input type="number" value="${item.ultima_manutencao_km || ''}" 
+                       onchange="atualizarCampo(${index}, 'ultima_manutencao_km', this.value); recalcularLinha(${index})"
+                       placeholder="KM">
+            </td>
+            <td>
+                <input type="date" value="${item.data_ultima_manutencao || ''}" 
+                       onchange="atualizarCampo(${index}, 'data_ultima_manutencao', this.value)">
+            </td>
+            <td>
+                ${status ? `<span class="status-${status.toLowerCase()}">${status}</span>` : '-'}
+            </td>
+            <td style="text-align: center; font-weight: 600;">
+                ${periodicidade > 0 ? proximaRevisao.toLocaleString('pt-BR') : '-'}
+            </td>
+            <td>
+                <button type="button" class="btn-delete-row" onclick="removerItem(${index})" title="Remover">
+                    <i class="ph ph-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function atualizarCampo(index, campo, valor) {
+    if (campo.includes('km')) {
+        revisoesData[index][campo] = parseInt(valor) || 0;
+    } else {
+        revisoesData[index][campo] = valor;
+    }
+}
+
+function recalcularLinha(index) {
+    renderizarTabela();
+    calcularKmUltimaRevisao();
+}
+
+function calcularKmUltimaRevisao() {
+    if (revisoesData.length === 0) {
+        document.getElementById('kmUltimaRevisao').textContent = '-';
+        return;
+    }
+    
+    const kmValues = revisoesData
+        .map(r => r.ultima_manutencao_km || 0)
+        .filter(km => km > 0);
+    
+    if (kmValues.length > 0) {
+        const maxKm = Math.max(...kmValues);
+        document.getElementById('kmUltimaRevisao').textContent = maxKm.toLocaleString('pt-BR');
+    } else {
+        document.getElementById('kmUltimaRevisao').textContent = '-';
+    }
+}
+
+async function atualizarKm() {
+    const placa = document.getElementById('selectVeiculo').value;
+    if (!placa) return;
+
+    const kmAtual = parseInt(document.getElementById('kmAtual').value) || 0;
+    const dataAtualizacao = document.getElementById('dataAtualizacao').value;
+
+    try {
+        await VeiculosKmAPI.upsert(placa, {
+            km_atual: kmAtual,
+            data_atualizacao: dataAtualizacao || null
+        });
+        veiculosKmData[placa] = { placa, km_atual: kmAtual, data_atualizacao: dataAtualizacao };
+        renderizarTabela();
+    } catch (error) {
+        console.error('Erro ao atualizar KM:', error);
+    }
+}
+
+function adicionarItemRevisao() {
+    const placa = document.getElementById('selectVeiculo').value;
+    if (!placa) {
+        Utils.showToast('Selecione um veículo primeiro', 'warning');
+        return;
+    }
+
+    revisoesData.push({
+        placa: placa,
+        item_servico: '',
+        periodicidade_km: null,
+        ultima_manutencao_km: null,
+        data_ultima_manutencao: null,
+        isNew: true
+    });
+    
+    renderizarTabela();
+}
+
+async function removerItem(index) {
+    const item = revisoesData[index];
+    
+    if (item.id && !item.isNew) {
+        if (!confirm('Tem certeza que deseja remover este item?')) return;
+        
+        try {
+            await RevisoesAPI.deletar(item.id);
+            Utils.showToast('Item removido com sucesso', 'success');
+        } catch (error) {
+            console.error('Erro ao remover item:', error);
+            Utils.showToast('Erro ao remover item', 'error');
+            return;
+        }
+    }
+    
+    revisoesData.splice(index, 1);
+    renderizarTabela();
+    calcularKmUltimaRevisao();
+}
+
+async function salvarTodasRevisoes() {
+    const placa = document.getElementById('selectVeiculo').value;
+    if (!placa) return;
+
+    try {
+        for (const item of revisoesData) {
+            if (!item.item_servico) continue;
+            
+            const dados = {
+                placa: placa,
+                item_servico: item.item_servico,
+                periodicidade_km: item.periodicidade_km || null,
+                ultima_manutencao_km: item.ultima_manutencao_km || null,
+                data_ultima_manutencao: item.data_ultima_manutencao || null
+            };
+
+            if (item.isNew) {
+                const result = await RevisoesAPI.criar(dados);
+                item.id = result[0].id;
+                delete item.isNew;
+            } else if (item.id) {
+                await RevisoesAPI.atualizar(item.id, dados);
+            }
+        }
+        
+        Utils.showToast('Revisões salvas com sucesso!', 'success');
+    } catch (error) {
+        console.error('Erro ao salvar revisões:', error);
+        Utils.showToast('Erro ao salvar revisões: ' + error.message, 'error');
+    }
+}
+
+// Função para adicionar itens padrão
+async function adicionarItensPadrao() {
+    const placa = document.getElementById('selectVeiculo').value;
+    if (!placa) {
+        Utils.showToast('Selecione um veículo primeiro', 'warning');
+        return;
+    }
+
+    if (revisoesData.length > 0) {
+        if (!confirm('Já existem itens cadastrados. Deseja adicionar os itens padrão mesmo assim?')) {
+            return;
+        }
+    }
+
+    const periodicidades = {
+        'Geometria e balanceamento': 10000,
+        'Correia do alternador': 50000,
+        'Correia dentada': 50000,
+        'Correia do compressor do ar-condicionado': 50000,
+        'Correia poly-v (bomba d\'água)': 50000,
+        'Filtro de ar motor': 10000,
+        'Filtro de cabine (antipólen)': 30000,
+        'Filtro de combustível': 20000,
+        'Óleo lubrificante': 8000,
+        'Filtro de óleo*': 8000,
+        'Fluido das transmissões': 70000,
+        'Fluido de freio (óleo do freio)': 30000,
+        'Limpeza do ar condicionado': 30000,
+        'Limpeza do sistema de arrefecimento': 50000,
+        'Líquido de arrefecimento': 50000,
+        'Pneus': 50000,
+        'Velas': 40000,
+        'Freios': 30000,
+        'Sistema de Injeção': 30000,
+        'Sinalização': null,
+        'Amortecedor': null
+    };
+
+    for (const item of ITENS_REVISAO_PADRAO) {
+        const jaExiste = revisoesData.some(r => r.item_servico === item);
+        if (!jaExiste) {
+            revisoesData.push({
+                placa: placa,
+                item_servico: item,
+                periodicidade_km: periodicidades[item] || null,
+                ultima_manutencao_km: null,
+                data_ultima_manutencao: null,
+                isNew: true
+            });
+        }
+    }
+
+    renderizarTabela();
+    Utils.showToast('Itens padrão adicionados. Clique em "Salvar Alterações" para confirmar.', 'info');
+}
+</script>
+
+</body>
+</html>
