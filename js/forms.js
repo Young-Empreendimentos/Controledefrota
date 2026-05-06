@@ -610,17 +610,21 @@ function showForm(formName) {
     // Esconder todos os formulários
     const forms = ['veiculos', 'seguros', 'manutencoes', 'sinistros', 'abastecimentos'];
     forms.forEach(f => {
-        document.getElementById(`form-${f}`).classList.add('hidden');
+        const el = document.getElementById(`form-${f}`);
+        if (el) el.classList.add('hidden');
     });
-    
+
     // Mostrar o formulário selecionado
-    document.getElementById(`form-${formName}`).classList.remove('hidden');
-    
+    const formEl = document.getElementById(`form-${formName}`);
+    if (formEl) formEl.classList.remove('hidden');
+
     // Atualizar menu ativo
     document.querySelectorAll('.forms-menu-item').forEach(item => {
         item.classList.remove('active');
+        if (item.textContent.toLowerCase().includes(formName.substring(0, 4))) {
+            item.classList.add('active');
+        }
     });
-    event.target.closest('.forms-menu-item').classList.add('active');
 }
 
 function confirmDelete(type, id) {
