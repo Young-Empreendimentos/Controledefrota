@@ -8,6 +8,7 @@ let deleteCallback = null;
 document.addEventListener('DOMContentLoaded', async () => {
     await loadVeiculos();
     await loadAllTables();
+    setupTableFilters();
     
     // Configurar botão cancelar do modal
     const btnCancel = document.getElementById('btnCancelDelete');
@@ -29,6 +30,42 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 });
+
+// Configurar filtros das tabelas
+function setupTableFilters() {
+    document.querySelectorAll('.filter-input').forEach(input => {
+        input.addEventListener('input', function() {
+            const table = this.closest('table');
+            filterTable(table);
+        });
+    });
+}
+
+// Filtrar tabela
+function filterTable(table) {
+    const tbody = table.querySelector('tbody');
+    const rows = tbody.querySelectorAll('tr');
+    const filterInputs = table.querySelectorAll('.filter-input');
+    
+    rows.forEach(row => {
+        let showRow = true;
+        const cells = row.querySelectorAll('td');
+        
+        filterInputs.forEach(input => {
+            const colIndex = parseInt(input.dataset.col);
+            const filterValue = input.value.toLowerCase().trim();
+            
+            if (filterValue && cells[colIndex]) {
+                const cellText = cells[colIndex].textContent.toLowerCase();
+                if (!cellText.includes(filterValue)) {
+                    showRow = false;
+                }
+            }
+        });
+        
+        row.style.display = showRow ? '' : 'none';
+    });
+}
 
 // Alternar visibilidade do painel de formulário
 function toggleFormPanel(panelId) {

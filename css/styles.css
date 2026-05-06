@@ -552,6 +552,34 @@ tr:hover td { background: #F9FAFB; }
     gap: 8px;
 }
 
+/* Filtros de Tabela */
+.filter-row th {
+    background: var(--bg-card) !important;
+    padding: 8px !important;
+}
+
+.filter-input {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: var(--text-main);
+    background: white;
+    transition: border-color 0.2s;
+}
+
+.filter-input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(254, 80, 9, 0.1);
+}
+
+.filter-input::placeholder {
+    color: #9CA3AF;
+    font-size: 0.75rem;
+}
+
 /* Menu Lateral para Formulários */
 .forms-layout {
     display: grid;
