@@ -13,9 +13,13 @@ CREATE TABLE IF NOT EXISTS frota_veiculos (
     ipva NUMERIC DEFAULT 0,
     dpvat NUMERIC DEFAULT 0,
     proprietario TEXT,
+    ordem INTEGER DEFAULT 999,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Para adicionar a coluna em tabela existente:
+-- ALTER TABLE frota_veiculos ADD COLUMN IF NOT EXISTS ordem INTEGER DEFAULT 999;
 
 -- 2. Tabela de Seguros
 CREATE TABLE IF NOT EXISTS frota_seguros (

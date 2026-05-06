@@ -160,6 +160,124 @@
             padding: 40px;
             color: var(--text-muted);
         }
+        
+        /* Modal de Ordenação */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-overlay.hidden {
+            display: none;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 400px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+        .modal-body {
+            padding: 20px;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+        .sortable-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sortable-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #F9FAFB;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: grab;
+            transition: all 0.2s;
+        }
+        .sortable-item:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
+        }
+        .sortable-item.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+        .sortable-item .drag-handle {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+        }
+        .sortable-item .veiculo-info {
+            flex: 1;
+        }
+        .sortable-item .veiculo-placa {
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .sortable-item .veiculo-modelo {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .sortable-item .ordem-num {
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        .btn-ordenar {
+            margin-left: 12px;
+        }
+        .select-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+        }
+        .select-container .form-group {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -194,14 +312,41 @@
         </div>
     </div>
 
+    <!-- Modal de Ordenação -->
+    <div id="modalOrdenacao" class="modal-overlay hidden" onclick="fecharModalOrdenacao(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3><i class="ph ph-list-numbers"></i> Ordenar Veículos</h3>
+                <button class="modal-close" onclick="fecharModalOrdenacao()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-muted); margin-bottom: 16px; font-size: 0.9rem;">
+                    <i class="ph ph-hand-grabbing"></i> Arraste para reordenar os veículos
+                </p>
+                <ul id="sortableList" class="sortable-list"></ul>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="fecharModalOrdenacao()">Cancelar</button>
+                <button class="btn btn-primary" onclick="salvarOrdenacao()">
+                    <i class="ph ph-floppy-disk"></i> Salvar Ordem
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Seleção de Veículo -->
     <div class="veiculo-select-container">
         <div class="veiculo-info-header">
-            <div class="form-group" style="margin: 0;">
-                <label for="selectVeiculo">Selecione o Veículo</label>
-                <select id="selectVeiculo" onchange="carregarRevisoes()">
-                    <option value="">-- Selecione --</option>
-                </select>
+            <div class="select-container">
+                <div class="form-group" style="margin: 0;">
+                    <label for="selectVeiculo">Selecione o Veículo</label>
+                    <select id="selectVeiculo" onchange="carregarRevisoes()">
+                        <option value="">-- Selecione --</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-secondary btn-ordenar" onclick="abrirModalOrdenacao()" title="Ordenar veículos">
+                    <i class="ph ph-list-numbers"></i> Ordenar
+                </button>
             </div>
             <div class="veiculo-info-box">
                 <label>KM Atual</label>
@@ -302,14 +447,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function carregarVeiculos() {
     try {
         veiculosData = await VeiculosAPI.listar();
-        const select = document.getElementById('selectVeiculo');
-        select.innerHTML = '<option value="">-- Selecione --</option>';
-        veiculosData.forEach(v => {
-            const option = document.createElement('option');
-            option.value = v.placa;
-            option.textContent = `${v.placa} - ${v.modelo || 'Sem modelo'}`;
-            select.appendChild(option);
-        });
+        
+        // Ordenar veículos pelo campo 'ordem'
+        veiculosData.sort((a, b) => (a.ordem || 999) - (b.ordem || 999));
+        
+        atualizarSelectVeiculos();
 
         // Carregar KM dos veículos
         await carregarKmVeiculos();
@@ -555,6 +697,141 @@ async function salvarTodasRevisoes() {
         console.error('Erro ao salvar revisões:', error);
         Utils.showToast('Erro ao salvar revisões: ' + error.message, 'error');
     }
+}
+
+// Funções de Ordenação
+function abrirModalOrdenacao() {
+    const modal = document.getElementById('modalOrdenacao');
+    const list = document.getElementById('sortableList');
+    
+    // Ordenar veículos pela ordem atual
+    const veiculosOrdenados = [...veiculosData].sort((a, b) => (a.ordem || 999) - (b.ordem || 999));
+    
+    list.innerHTML = '';
+    veiculosOrdenados.forEach((v, index) => {
+        const li = document.createElement('li');
+        li.className = 'sortable-item';
+        li.draggable = true;
+        li.dataset.placa = v.placa;
+        li.dataset.id = v.id;
+        li.innerHTML = `
+            <span class="ordem-num">${index + 1}</span>
+            <i class="ph ph-dots-six-vertical drag-handle"></i>
+            <div class="veiculo-info">
+                <div class="veiculo-placa">${v.placa}</div>
+                <div class="veiculo-modelo">${v.modelo || 'Sem modelo'}</div>
+            </div>
+        `;
+        
+        li.addEventListener('dragstart', handleDragStart);
+        li.addEventListener('dragend', handleDragEnd);
+        li.addEventListener('dragover', handleDragOver);
+        li.addEventListener('drop', handleDrop);
+        
+        list.appendChild(li);
+    });
+    
+    modal.classList.remove('hidden');
+}
+
+function fecharModalOrdenacao(event) {
+    if (event && event.target !== event.currentTarget) return;
+    document.getElementById('modalOrdenacao').classList.add('hidden');
+}
+
+let draggedItem = null;
+
+function handleDragStart(e) {
+    draggedItem = this;
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragEnd(e) {
+    this.classList.remove('dragging');
+    atualizarNumerosOrdem();
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    
+    const list = document.getElementById('sortableList');
+    const items = [...list.querySelectorAll('.sortable-item:not(.dragging)')];
+    
+    const afterElement = items.find(item => {
+        const rect = item.getBoundingClientRect();
+        return e.clientY < rect.top + rect.height / 2;
+    });
+    
+    if (afterElement) {
+        list.insertBefore(draggedItem, afterElement);
+    } else {
+        list.appendChild(draggedItem);
+    }
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+}
+
+function atualizarNumerosOrdem() {
+    const items = document.querySelectorAll('#sortableList .sortable-item');
+    items.forEach((item, index) => {
+        item.querySelector('.ordem-num').textContent = index + 1;
+    });
+}
+
+async function salvarOrdenacao() {
+    const items = document.querySelectorAll('#sortableList .sortable-item');
+    const atualizacoes = [];
+    
+    items.forEach((item, index) => {
+        atualizacoes.push({
+            id: item.dataset.id,
+            placa: item.dataset.placa,
+            ordem: index + 1
+        });
+    });
+    
+    try {
+        // Atualizar cada veículo com sua nova ordem
+        for (const item of atualizacoes) {
+            await VeiculosAPI.atualizar(item.id, { ordem: item.ordem });
+            
+            // Atualizar no array local
+            const veiculo = veiculosData.find(v => v.id === item.id);
+            if (veiculo) veiculo.ordem = item.ordem;
+        }
+        
+        Utils.showToast('Ordem salva com sucesso!', 'success');
+        fecharModalOrdenacao();
+        
+        // Recarregar select com nova ordem
+        atualizarSelectVeiculos();
+    } catch (error) {
+        console.error('Erro ao salvar ordem:', error);
+        Utils.showToast('Erro ao salvar ordem', 'error');
+    }
+}
+
+function atualizarSelectVeiculos() {
+    const select = document.getElementById('selectVeiculo');
+    const valorAtual = select.value;
+    
+    // Ordenar veículos pela ordem
+    const veiculosOrdenados = [...veiculosData].sort((a, b) => (a.ordem || 999) - (b.ordem || 999));
+    
+    select.innerHTML = '<option value="">-- Selecione --</option>';
+    veiculosOrdenados.forEach(v => {
+        const option = document.createElement('option');
+        option.value = v.placa;
+        option.textContent = `${v.placa} - ${v.modelo || 'Sem modelo'}`;
+        select.appendChild(option);
+    });
+    
+    // Restaurar seleção
+    select.value = valorAtual;
 }
 
 // Função para adicionar itens padrão
