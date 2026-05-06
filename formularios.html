@@ -341,15 +341,15 @@
 </div>
 
 <!-- Modal de Confirmação -->
-<div id="modal-delete" class="modal-overlay hidden">
-    <div class="modal">
+<div id="modal-delete" class="modal-overlay hidden" style="display: none;">
+    <div class="modal" onclick="event.stopPropagation()">
         <div class="modal-title">Confirmar Exclusão</div>
         <div class="modal-body">
             Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.
         </div>
         <div class="modal-actions">
-            <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancelar</button>
-            <button class="btn btn-danger" id="btnConfirmDelete">Excluir</button>
+            <button type="button" class="btn btn-secondary" id="btnCancelDelete">Cancelar</button>
+            <button type="button" class="btn btn-danger" id="btnConfirmDelete">Excluir</button>
         </div>
     </div>
 </div>

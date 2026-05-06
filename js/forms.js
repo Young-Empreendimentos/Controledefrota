@@ -8,6 +8,26 @@ let deleteCallback = null;
 document.addEventListener('DOMContentLoaded', async () => {
     await loadVeiculos();
     await loadAllTables();
+    
+    // Configurar botão cancelar do modal
+    const btnCancel = document.getElementById('btnCancelDelete');
+    if (btnCancel) {
+        btnCancel.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeDeleteModal();
+        });
+    }
+    
+    // Fechar modal ao clicar no overlay
+    const modalOverlay = document.getElementById('modal-delete');
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === modalOverlay) {
+                closeDeleteModal();
+            }
+        });
+    }
 });
 
 // Carregar lista de veículos para os selects
@@ -576,9 +596,17 @@ function showForm(formName) {
 function confirmDelete(type, id) {
     const modal = document.getElementById('modal-delete');
     modal.classList.remove('hidden');
+    modal.style.display = 'flex';
     
+    // Remover handler anterior para evitar duplicação
     const btnConfirm = document.getElementById('btnConfirmDelete');
-    btnConfirm.onclick = async () => {
+    const newBtn = btnConfirm.cloneNode(true);
+    btnConfirm.parentNode.replaceChild(newBtn, btnConfirm);
+    
+    newBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         switch(type) {
             case 'veiculo':
                 await deleteVeiculo(id);
@@ -597,9 +625,11 @@ function confirmDelete(type, id) {
                 break;
         }
         closeDeleteModal();
-    };
+    });
 }
 
 function closeDeleteModal() {
-    document.getElementById('modal-delete').classList.add('hidden');
+    const modal = document.getElementById('modal-delete');
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
 }
