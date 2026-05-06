@@ -27,6 +27,16 @@
             align-items: center;
             margin-bottom: 20px;
         }
+        @media (max-width: 900px) {
+            .veiculo-info-header {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        @media (max-width: 600px) {
+            .veiculo-info-header {
+                grid-template-columns: 1fr;
+            }
+        }
         .veiculo-info-box {
             background: var(--primary-light);
             padding: 12px 20px;
@@ -76,6 +86,7 @@
             padding: 24px;
             border-radius: var(--radius);
             box-shadow: var(--shadow);
+            overflow-x: auto;
         }
         .revisoes-table {
             width: 100%;

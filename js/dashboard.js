@@ -278,8 +278,22 @@ function updateCharts(fuel, maint, claims, fixed, abastecimentos, manutencoes, s
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    bottom: 10
+                }
+            },
             plugins: {
-                legend: { position: 'bottom' }
+                legend: { 
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        padding: 12,
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
             }
         }
     });
@@ -332,9 +346,39 @@ function updateCharts(fuel, maint, claims, fixed, abastecimentos, manutencoes, s
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    top: 10
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        boxWidth: 12,
+                        padding: 10,
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
+            },
             scales: {
-                y: { beginAtZero: true },
-                x: { grid: { display: false } }
+                y: { 
+                    beginAtZero: true,
+                    ticks: {
+                        font: {
+                            size: 11
+                        }
+                    }
+                },
+                x: { 
+                    grid: { display: false },
+                    ticks: {
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
             }
         }
     });
