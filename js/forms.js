@@ -33,11 +33,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Configurar filtros das tabelas
 function setupTableFilters() {
+    // Listeners para inputs de texto
     document.querySelectorAll('.filter-input').forEach(input => {
-        input.addEventListener('input', function() {
+        const eventType = input.tagName === 'SELECT' ? 'change' : 'input';
+        input.addEventListener(eventType, function() {
             const table = this.closest('table');
             filterTable(table);
         });
+    });
+    
+    // Preencher selects de placa
+    updatePlacaFilters();
+}
+
+// Atualizar selects de filtro de placa
+function updatePlacaFilters() {
+    document.querySelectorAll('.filter-placa').forEach(select => {
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">Todas</option>';
+        veiculos.forEach(v => {
+            const option = document.createElement('option');
+            option.value = v.placa;
+            option.textContent = v.placa;
+            select.appendChild(option);
+        });
+        select.value = currentValue;
     });
 }
 
@@ -96,6 +116,7 @@ async function loadVeiculos() {
     try {
         veiculos = await VeiculosAPI.listar();
         updateVeiculoSelects();
+        updatePlacaFilters();
     } catch (error) {
         console.error('Erro ao carregar veículos:', error);
         Utils.showToast('Erro ao carregar lista de veículos', 'error');
