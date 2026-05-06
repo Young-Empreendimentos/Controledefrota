@@ -147,9 +147,13 @@ async function editVeiculo(id) {
             document.getElementById('veiculoDPVAT').value = item.dpvat || '';
             document.getElementById('veiculoProprietario').value = item.proprietario || '';
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            Utils.showToast(`Editando veículo ${item.placa}`, 'info');
+        } else {
+            Utils.showToast('Veículo não encontrado', 'error');
         }
     } catch (error) {
-        Utils.showToast('Erro ao carregar veículo', 'error');
+        console.error('Erro editVeiculo:', error);
+        Utils.showToast('Erro ao carregar veículo: ' + error.message, 'error');
     }
 }
 
@@ -253,9 +257,13 @@ async function editSeguro(id) {
             document.getElementById('seguroUrlApolice').value = item.url_apolice || '';
             showForm('seguros');
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            Utils.showToast(`Editando seguro - ${item.placa}`, 'info');
+        } else {
+            Utils.showToast('Seguro não encontrado', 'error');
         }
     } catch (error) {
-        Utils.showToast('Erro ao carregar seguro', 'error');
+        console.error('Erro editSeguro:', error);
+        Utils.showToast('Erro ao carregar seguro: ' + error.message, 'error');
     }
 }
 
@@ -353,9 +361,13 @@ async function editManutencao(id) {
             document.getElementById('manutencaoValor').value = item.valor || '';
             showForm('manutencoes');
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            Utils.showToast(`Editando manutenção - ${item.placa}`, 'info');
+        } else {
+            Utils.showToast('Manutenção não encontrada', 'error');
         }
     } catch (error) {
-        Utils.showToast('Erro ao carregar manutenção', 'error');
+        console.error('Erro editManutencao:', error);
+        Utils.showToast('Erro ao carregar manutenção: ' + error.message, 'error');
     }
 }
 
@@ -455,9 +467,13 @@ async function editSinistro(id) {
             document.getElementById('sinistroValor').value = item.valor || '';
             showForm('sinistros');
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            Utils.showToast(`Editando sinistro - ${item.placa}`, 'info');
+        } else {
+            Utils.showToast('Sinistro não encontrado', 'error');
         }
     } catch (error) {
-        Utils.showToast('Erro ao carregar sinistro', 'error');
+        console.error('Erro editSinistro:', error);
+        Utils.showToast('Erro ao carregar sinistro: ' + error.message, 'error');
     }
 }
 
@@ -554,9 +570,13 @@ async function editAbastecimento(id) {
             document.getElementById('abastecimentoValorTotal').value = item.valor_total || '';
             showForm('abastecimentos');
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            Utils.showToast(`Editando abastecimento - ${item.placa}`, 'info');
+        } else {
+            Utils.showToast('Abastecimento não encontrado', 'error');
         }
     } catch (error) {
-        Utils.showToast('Erro ao carregar abastecimento', 'error');
+        console.error('Erro editAbastecimento:', error);
+        Utils.showToast('Erro ao carregar abastecimento: ' + error.message, 'error');
     }
 }
 

@@ -606,6 +606,7 @@ tr:hover td { background: #F9FAFB; }
 .toast.success { background: var(--secondary); }
 .toast.error { background: var(--danger); }
 .toast.warning { background: var(--warning); }
+.toast.info { background: var(--primary); }
 
 @keyframes slideIn {
     from { transform: translateX(100%); opacity: 0; }

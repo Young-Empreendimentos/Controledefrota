@@ -280,8 +280,14 @@ const Utils = {
         const container = document.getElementById('toast-container') || this.createToastContainer();
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
+        const icons = {
+            success: 'check-circle',
+            error: 'x-circle',
+            warning: 'warning',
+            info: 'pencil-simple'
+        };
         toast.innerHTML = `
-            <i class="ph ph-${type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : 'warning'}"></i>
+            <i class="ph ph-${icons[type] || 'info'}"></i>
             ${message}
         `;
         container.appendChild(toast);
