@@ -96,23 +96,117 @@ function renderSidebar() {
     const container = document.getElementById('vehicleList');
     container.innerHTML = '';
 
-    globalData.veiculos.forEach(veiculo => {
+    // Ordenar veículos conforme ordem salva
+    const ordemSalva = getOrdemVeiculos();
+    if (ordemSalva.length > 0) {
+        globalData.veiculos.sort((a, b) => {
+            const indexA = ordemSalva.indexOf(a.placa);
+            const indexB = ordemSalva.indexOf(b.placa);
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+            return indexA - indexB;
+        });
+    }
+
+    globalData.veiculos.forEach((veiculo, index) => {
         const div = document.createElement('div');
         div.className = 'vehicle-btn';
-        div.onclick = () => selectVehicle(veiculo.placa);
         div.id = `btn-${Utils.normalizePlate(veiculo.placa)}`;
+        div.dataset.placa = veiculo.placa;
+        div.draggable = true;
         
         const modelShort = veiculo.modelo ? veiculo.modelo.split(' ')[0] : 'N/A';
         
         div.innerHTML = `
-            <div style="display:flex; flex-direction:column;">
-                <span style="font-weight:700; color:var(--text-main);">${veiculo.placa}</span>
-                <span style="font-size:0.75rem;">${modelShort}</span>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <i class="ph ph-dots-six-vertical drag-handle" style="cursor:grab; color:#aaa;"></i>
+                <div style="display:flex; flex-direction:column;">
+                    <span style="font-weight:700; color:var(--text-main);">${veiculo.placa}</span>
+                    <span style="font-size:0.75rem;">${modelShort}</span>
+                </div>
             </div>
             <i class="ph ph-caret-right"></i>
         `;
+        
+        // Event listeners para drag and drop
+        div.addEventListener('dragstart', handleDragStart);
+        div.addEventListener('dragend', handleDragEnd);
+        div.addEventListener('dragover', handleDragOver);
+        div.addEventListener('drop', handleDrop);
+        div.addEventListener('dragenter', handleDragEnter);
+        div.addEventListener('dragleave', handleDragLeave);
+        div.addEventListener('click', () => selectVehicle(veiculo.placa));
+        
         container.appendChild(div);
     });
+}
+
+// Drag and Drop - Variável para item sendo arrastado
+let draggedItem = null;
+
+function handleDragStart(e) {
+    draggedItem = this;
+    this.style.opacity = '0.5';
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragEnd(e) {
+    this.style.opacity = '1';
+    document.querySelectorAll('.vehicle-btn').forEach(item => {
+        item.classList.remove('drag-over');
+    });
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+
+function handleDragEnter(e) {
+    this.classList.add('drag-over');
+}
+
+function handleDragLeave(e) {
+    this.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    if (draggedItem !== this) {
+        const container = document.getElementById('vehicleList');
+        const items = Array.from(container.querySelectorAll('.vehicle-btn'));
+        const draggedIndex = items.indexOf(draggedItem);
+        const targetIndex = items.indexOf(this);
+        
+        if (draggedIndex < targetIndex) {
+            this.parentNode.insertBefore(draggedItem, this.nextSibling);
+        } else {
+            this.parentNode.insertBefore(draggedItem, this);
+        }
+        
+        // Salvar nova ordem
+        salvarOrdemVeiculos();
+    }
+    this.classList.remove('drag-over');
+}
+
+// Salvar ordem dos veículos no localStorage
+function salvarOrdemVeiculos() {
+    const container = document.getElementById('vehicleList');
+    const items = Array.from(container.querySelectorAll('.vehicle-btn'));
+    const ordem = items.map(item => item.dataset.placa);
+    localStorage.setItem('ordemVeiculos', JSON.stringify(ordem));
+    
+    // Atualizar globalData para manter consistência
+    globalData.veiculos.sort((a, b) => {
+        return ordem.indexOf(a.placa) - ordem.indexOf(b.placa);
+    });
+}
+
+// Obter ordem dos veículos do localStorage
+function getOrdemVeiculos() {
+    const ordem = localStorage.getItem('ordemVeiculos');
+    return ordem ? JSON.parse(ordem) : [];
 }
 
 // Selecionar veículo
