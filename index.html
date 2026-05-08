@@ -72,6 +72,24 @@
             </div>
         </div>
 
+        <!-- Filtro de Período -->
+        <div class="filter-period">
+            <div class="filter-label">
+                <i class="ph ph-calendar"></i> Filtrar período:
+            </div>
+            <div class="filter-inputs">
+                <input type="date" id="dataInicial" class="filter-date" title="Data inicial">
+                <span style="color: #666;">até</span>
+                <input type="date" id="dataFinal" class="filter-date" title="Data final">
+                <button class="btn btn-sm btn-secondary" onclick="aplicarFiltroPeriodo()" title="Aplicar filtro">
+                    <i class="ph ph-funnel"></i> Filtrar
+                </button>
+                <button class="btn btn-sm" onclick="limparFiltroPeriodo()" title="Limpar filtro" style="background:#f3f4f6;">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+        </div>
+
         <!-- KPIs -->
         <div class="kpi-grid">
             <div class="kpi-card total">

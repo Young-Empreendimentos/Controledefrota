@@ -18,6 +18,7 @@ let globalData = {
 
 let selectedPlate = null;
 let charts = { history: null, dist: null };
+let filtroPeriodo = { dataInicial: null, dataFinal: null };
 
 // Inicialização
 async function initDashboard() {
@@ -235,16 +236,26 @@ function selectVehicle(placa) {
     document.getElementById('displayInsurer').textContent = seguro ? `Seg: ${seguro.seguradora}` : 'Sem Seguro';
 
     // Filtrar dados por placa
-    const manutencoes = globalData.manutencoes.filter(m => Utils.normalizePlate(m.placa) === normalizedPlate);
-    const sinistros = globalData.sinistros.filter(s => Utils.normalizePlate(s.placa) === normalizedPlate);
-    const abastecimentos = globalData.abastecimentos.filter(a => Utils.normalizePlate(a.placa) === normalizedPlate);
+    let manutencoes = globalData.manutencoes.filter(m => Utils.normalizePlate(m.placa) === normalizedPlate);
+    let sinistros = globalData.sinistros.filter(s => Utils.normalizePlate(s.placa) === normalizedPlate);
+    let abastecimentos = globalData.abastecimentos.filter(a => Utils.normalizePlate(a.placa) === normalizedPlate);
 
-    // Filtrar abastecimentos do ano atual
+    // Aplicar filtro de período se definido
+    manutencoes = filtrarPorPeriodo(manutencoes, 'data');
+    sinistros = filtrarPorPeriodo(sinistros, 'data');
+    abastecimentos = filtrarPorPeriodo(abastecimentos, 'data');
+
+    // Filtrar abastecimentos do ano atual (se não houver filtro de período)
     const currentYear = new Date().getFullYear();
-    const abastecimentosAno = abastecimentos.filter(a => {
-        const date = new Date(a.data);
-        return date.getFullYear() === currentYear;
-    });
+    let abastecimentosAno;
+    if (filtroPeriodo.dataInicial || filtroPeriodo.dataFinal) {
+        abastecimentosAno = abastecimentos; // Usa o filtro de período
+    } else {
+        abastecimentosAno = abastecimentos.filter(a => {
+            const date = new Date(a.data);
+            return date.getFullYear() === currentYear;
+        });
+    }
 
     // Calcular totais
     const totalMaint = manutencoes.reduce((sum, m) => sum + (parseFloat(m.valor) || 0), 0);
@@ -492,6 +503,45 @@ function switchTab(tabName) {
     if (tabs[tabIndex[tabName]]) {
         tabs[tabIndex[tabName]].classList.add('active');
     }
+}
+
+// Filtro de período
+function aplicarFiltroPeriodo() {
+    filtroPeriodo.dataInicial = document.getElementById('dataInicial').value || null;
+    filtroPeriodo.dataFinal = document.getElementById('dataFinal').value || null;
+    
+    if (selectedPlate) {
+        selectVehicle(selectedPlate);
+    }
+}
+
+function limparFiltroPeriodo() {
+    document.getElementById('dataInicial').value = '';
+    document.getElementById('dataFinal').value = '';
+    filtroPeriodo.dataInicial = null;
+    filtroPeriodo.dataFinal = null;
+    
+    if (selectedPlate) {
+        selectVehicle(selectedPlate);
+    }
+}
+
+function filtrarPorPeriodo(items, campoData = 'data') {
+    if (!filtroPeriodo.dataInicial && !filtroPeriodo.dataFinal) {
+        return items;
+    }
+    
+    return items.filter(item => {
+        const dataItem = item[campoData];
+        if (!dataItem) return true;
+        
+        const data = dataItem.substring(0, 10); // Pegar só YYYY-MM-DD
+        
+        if (filtroPeriodo.dataInicial && data < filtroPeriodo.dataInicial) return false;
+        if (filtroPeriodo.dataFinal && data > filtroPeriodo.dataFinal) return false;
+        
+        return true;
+    });
 }
 
 // Iniciar ao carregar a página

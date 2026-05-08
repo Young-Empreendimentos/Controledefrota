@@ -174,6 +174,53 @@ body {
 
 .vehicle-btn.active span { color: white !important; }
 
+/* Filtro de Período */
+.filter-period {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 12px 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.filter-label {
+    font-weight: 600;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+}
+
+.filter-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.filter-date {
+    padding: 8px 12px;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    background: #fff;
+}
+
+.filter-date:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.btn-sm {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+}
+
 /* Drag and Drop */
 .vehicle-btn.drag-over {
     border: 2px dashed var(--primary);
