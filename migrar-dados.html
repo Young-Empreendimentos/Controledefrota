@@ -44,6 +44,32 @@
             Os links abaixo são os mesmos utilizados no dashboard original.
         </p>
 
+        <!-- Filtro de Período -->
+        <div class="form-container" style="background: #FEF3C7; box-shadow: none; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                <i class="ph ph-calendar" style="color: var(--warning);"></i>
+                <strong style="color: #92400E;">Filtrar por Período</strong>
+            </div>
+            <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: end;">
+                <div style="flex: 1; min-width: 200px;">
+                    <label class="form-label">Data Inicial</label>
+                    <input type="date" id="dataInicial" class="form-input">
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <label class="form-label">Data Final</label>
+                    <input type="date" id="dataFinal" class="form-input">
+                </div>
+                <div>
+                    <button class="btn btn-secondary" onclick="limparFiltro()" style="height: 42px;">
+                        <i class="ph ph-x"></i> Limpar
+                    </button>
+                </div>
+            </div>
+            <p style="font-size: 0.8rem; color: #92400E; margin-top: 10px; margin-bottom: 0;">
+                <i class="ph ph-info"></i> Deixe em branco para importar todos os registros. O filtro se aplica a manutenções, sinistros e abastecimentos.
+            </p>
+        </div>
+
         <div style="display: flex; flex-direction: column; gap: 16px;">
             <!-- Veículos -->
             <div class="form-container" style="background: #F9FAFB; box-shadow: none;">
@@ -170,6 +196,31 @@ function parseCurrency(value) {
     let clean = value.toString().replace('R$', '').trim().replaceAll('.', '').replace(',', '.');
     let floatVal = parseFloat(clean);
     return isNaN(floatVal) ? 0 : floatVal;
+}
+
+function limparFiltro() {
+    document.getElementById('dataInicial').value = '';
+    document.getElementById('dataFinal').value = '';
+    log('Filtro de período limpo', 'info');
+}
+
+function getFiltroPeriodo() {
+    const dataInicial = document.getElementById('dataInicial').value;
+    const dataFinal = document.getElementById('dataFinal').value;
+    return { dataInicial, dataFinal };
+}
+
+function isDataDentroDoIntervalo(dataStr) {
+    const filtro = getFiltroPeriodo();
+    if (!filtro.dataInicial && !filtro.dataFinal) return true;
+    
+    const dataISO = parseDate(dataStr);
+    if (!dataISO) return true;
+    
+    if (filtro.dataInicial && dataISO < filtro.dataInicial) return false;
+    if (filtro.dataFinal && dataISO > filtro.dataFinal) return false;
+    
+    return true;
 }
 
 function parseDate(dateStr) {
@@ -302,21 +353,33 @@ async function migrarManutencoes() {
     setStatus('statusManutencoes', 'Buscando dados...', 'info');
 
     try {
+        const filtro = getFiltroPeriodo();
+        if (filtro.dataInicial || filtro.dataFinal) {
+            log(`Aplicando filtro de período: ${filtro.dataInicial || 'início'} até ${filtro.dataFinal || 'fim'}`);
+        }
+        
         log('Iniciando migração de manutenções...');
         const data = await fetchCSV(SHEETS.manutencoes);
         log(`Encontrados ${data.length} registros na planilha`);
 
         let imported = 0;
         let errors = 0;
+        let filtered = 0;
 
         for (const row of data) {
             const placa = extractPlateFromText(row.Placa || '');
             if (!placa || placa.length < 5) continue;
 
+            const dataRow = row['Data da solicitação'] || row.Data;
+            if (!isDataDentroDoIntervalo(dataRow)) {
+                filtered++;
+                continue;
+            }
+
             try {
                 await ManutencoesAPI.criar({
                     placa: placa,
-                    data: parseDate(row['Data da solicitação'] || row.Data),
+                    data: parseDate(dataRow),
                     descricao: row['Descrição da manutenção'] || row['Descrição'] || '',
                     mecanico: row.Mecânico || row.Oficina || '',
                     valor: parseCurrency(row.Valor)
@@ -327,8 +390,11 @@ async function migrarManutencoes() {
             }
         }
 
-        setStatus('statusManutencoes', `Importados: ${imported} | Erros: ${errors}`, imported > 0 ? 'success' : 'error');
-        log(`Migração de manutenções concluída: ${imported} importados, ${errors} erros`, 'success');
+        const msg = filtered > 0 
+            ? `Importados: ${imported} | Filtrados: ${filtered} | Erros: ${errors}`
+            : `Importados: ${imported} | Erros: ${errors}`;
+        setStatus('statusManutencoes', msg, imported > 0 ? 'success' : 'error');
+        log(`Migração de manutenções concluída: ${imported} importados, ${filtered} filtrados, ${errors} erros`, 'success');
     } catch (error) {
         setStatus('statusManutencoes', 'Erro: ' + error.message, 'error');
         log('Erro na migração de manutenções: ' + error.message, 'error');
@@ -346,21 +412,33 @@ async function migrarSinistros() {
     setStatus('statusSinistros', 'Buscando dados...', 'info');
 
     try {
+        const filtro = getFiltroPeriodo();
+        if (filtro.dataInicial || filtro.dataFinal) {
+            log(`Aplicando filtro de período: ${filtro.dataInicial || 'início'} até ${filtro.dataFinal || 'fim'}`);
+        }
+        
         log('Iniciando migração de sinistros...');
         const data = await fetchCSV(SHEETS.sinistros);
         log(`Encontrados ${data.length} registros na planilha`);
 
         let imported = 0;
         let errors = 0;
+        let filtered = 0;
 
         for (const row of data) {
             const placa = extractPlateFromText(row.Placa || '');
             if (!placa || placa.length < 5) continue;
 
+            const dataRow = row['Data do sinistro'] || row.Data;
+            if (!isDataDentroDoIntervalo(dataRow)) {
+                filtered++;
+                continue;
+            }
+
             try {
                 await SinistrosAPI.criar({
                     placa: placa,
-                    data: parseDate(row['Data do sinistro'] || row.Data),
+                    data: parseDate(dataRow),
                     descricao: row['Descrição do sinistro'] || row['Descrição'] || '',
                     bo: row['B.O'] || row['BO'] || '',
                     valor: parseCurrency(row.Valor)
@@ -371,8 +449,11 @@ async function migrarSinistros() {
             }
         }
 
-        setStatus('statusSinistros', `Importados: ${imported} | Erros: ${errors}`, imported > 0 ? 'success' : 'error');
-        log(`Migração de sinistros concluída: ${imported} importados, ${errors} erros`, 'success');
+        const msg = filtered > 0 
+            ? `Importados: ${imported} | Filtrados: ${filtered} | Erros: ${errors}`
+            : `Importados: ${imported} | Erros: ${errors}`;
+        setStatus('statusSinistros', msg, imported > 0 ? 'success' : 'error');
+        log(`Migração de sinistros concluída: ${imported} importados, ${filtered} filtrados, ${errors} erros`, 'success');
     } catch (error) {
         setStatus('statusSinistros', 'Erro: ' + error.message, 'error');
         log('Erro na migração de sinistros: ' + error.message, 'error');
@@ -390,16 +471,28 @@ async function migrarAbastecimentos() {
     setStatus('statusAbastecimentos', 'Buscando dados...', 'info');
 
     try {
+        const filtro = getFiltroPeriodo();
+        if (filtro.dataInicial || filtro.dataFinal) {
+            log(`Aplicando filtro de período: ${filtro.dataInicial || 'início'} até ${filtro.dataFinal || 'fim'}`);
+        }
+        
         log('Iniciando migração de abastecimentos...');
         const data = await fetchCSV(SHEETS.abastecimentos);
         log(`Encontrados ${data.length} registros na planilha`);
 
         let imported = 0;
         let errors = 0;
+        let filtered = 0;
 
         for (const row of data) {
             const placa = extractPlateFromText(row.Placa || '');
             if (!placa || placa.length < 5) continue;
+
+            const dataRow = row.Data;
+            if (!isDataDentroDoIntervalo(dataRow)) {
+                filtered++;
+                continue;
+            }
 
             try {
                 const litros = parseFloat((row.Litros || '0').replace(',', '.')) || 0;
@@ -408,7 +501,7 @@ async function migrarAbastecimentos() {
 
                 await AbastecimentosAPI.criar({
                     placa: placa,
-                    data: parseDate(row.Data),
+                    data: parseDate(dataRow),
                     litros: litros,
                     valor_unitario: valorUnitario,
                     valor_total: valorTotal || (litros * valorUnitario)
@@ -419,8 +512,11 @@ async function migrarAbastecimentos() {
             }
         }
 
-        setStatus('statusAbastecimentos', `Importados: ${imported} | Erros: ${errors}`, imported > 0 ? 'success' : 'error');
-        log(`Migração de abastecimentos concluída: ${imported} importados, ${errors} erros`, 'success');
+        const msg = filtered > 0 
+            ? `Importados: ${imported} | Filtrados: ${filtered} | Erros: ${errors}`
+            : `Importados: ${imported} | Erros: ${errors}`;
+        setStatus('statusAbastecimentos', msg, imported > 0 ? 'success' : 'error');
+        log(`Migração de abastecimentos concluída: ${imported} importados, ${filtered} filtrados, ${errors} erros`, 'success');
     } catch (error) {
         setStatus('statusAbastecimentos', 'Erro: ' + error.message, 'error');
         log('Erro na migração de abastecimentos: ' + error.message, 'error');
