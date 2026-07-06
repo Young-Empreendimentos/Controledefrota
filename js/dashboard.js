@@ -544,5 +544,5 @@ function filtrarPorPeriodo(items, campoData = 'data') {
     });
 }
 
-// Iniciar ao carregar a página
-document.addEventListener('DOMContentLoaded', initDashboard);
+// Iniciar somente após o portão de autenticação liberar o acesso
+FrotaAuth.onReady(initDashboard);

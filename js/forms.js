@@ -4,8 +4,8 @@
 let veiculos = [];
 let deleteCallback = null;
 
-// Inicialização
-document.addEventListener('DOMContentLoaded', async () => {
+// Inicialização — somente após o portão de autenticação liberar o acesso
+FrotaAuth.onReady(async () => {
     await loadVeiculos();
     await loadAllTables();
     setupTableFilters();

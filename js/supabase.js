@@ -1,15 +1,25 @@
 // Configuração do Supabase
-// ATENÇÃO: Para produção, use a anon key e configure RLS adequadamente
 const SUPABASE_URL = 'https://vvtympzatclvjaqucebr.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2dHltcHphdGNsdmphcXVjZWJyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDQ1MjU3NiwiZXhwIjoyMDg2MDI4NTc2fQ.YkZLMPoF56tW9rTTygrd2Hx4-WKANXsHl_pe0ZIzeAg';
+// Chave PÚBLICA (anon). É seguro expor no browser: o acesso real é controlado
+// por login (Supabase Auth, em js/auth.js) + RLS no banco.
+// NUNCA coloque a service_role key aqui.
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2dHltcHphdGNsdmphcXVjZWJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0NTI1NzYsImV4cCI6MjA4NjAyODU3Nn0.C8vWcljx6veAQ0hCi0ms7Ixm6NxhSdWBDeRgUy2Kz50';
 
-// Cliente Supabase usando REST API
+// Cliente Supabase usando REST API.
+// O token do usuário logado é injetado por js/auth.js (setToken) após o login,
+// para que a RLS enxergue as requisições como o usuário autenticado.
 const SupabaseClient = {
     headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         'Content-Type': 'application/json',
         'Prefer': 'return=representation'
+    },
+
+    // Define o token JWT do usuário logado para as chamadas REST.
+    // Sem token (logout), volta para a anon key.
+    setToken(accessToken) {
+        this.headers['Authorization'] = `Bearer ${accessToken || SUPABASE_ANON_KEY}`;
     },
 
     // Buscar todos os registros de uma tabela
