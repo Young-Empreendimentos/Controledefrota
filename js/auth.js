@@ -253,6 +253,7 @@ const FrotaAuth = (function () {
         let pendentes = [];
         try {
             const { data, error } = await sb
+                .schema('frota')
                 .from('frota_solicitacao_acesso')
                 .select('id,email,full_name,requested_at')
                 .eq('status', 'pending')

@@ -13,7 +13,14 @@ const SupabaseClient = {
         'apikey': SUPABASE_ANON_KEY,
         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
+        'Prefer': 'return=representation',
+        // As tabelas do frota vivem no schema 'frota' (os nomes seguem com prefixo
+        // frota_). Na API REST, o schema é escolhido por header: Accept-Profile em
+        // leituras (GET) e Content-Profile em escritas (POST/PATCH/DELETE).
+        // Equivale ao .schema('frota') do supabase-js. As RPCs continuam no schema
+        // public e são chamadas pelo supabase-js (não passam por aqui).
+        'Accept-Profile': 'frota',
+        'Content-Profile': 'frota'
     },
 
     // Define o token JWT do usuário logado para as chamadas REST.
