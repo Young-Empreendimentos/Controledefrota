@@ -225,11 +225,11 @@
       if (!URL || !KEY) { console.warn("[celebracao-venda] faltam data-url / data-key"); return; }
       client = window.supabase.createClient(URL, KEY, { auth: { persistSession: false, autoRefreshToken: false } });
     }
-    var inicio = Date.now();
+    var vistos = {}; // dedupe por id (não depende do relógio do PC)
     client.channel("vendas-celebracao-" + Math.random().toString(36).slice(2, 8))
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "vendas_celebracao" }, function (p) {
         var v = p["new"];
-        if (new Date(v.created_at).getTime() < inicio - 60000) return;
+        if (vistos[v.id]) return; vistos[v.id] = true;
         fila.push(v); proxima();
       })
       .subscribe();
