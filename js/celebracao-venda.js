@@ -21,9 +21,10 @@
   var URL = script.getAttribute("data-url");
   var KEY = script.getAttribute("data-key");
   var SISTEMA = script.getAttribute("data-sistema") || "";
-  var DURACAO = parseInt(script.getAttribute("data-duracao") || "3", 10) * 1000;
+  var DURACAO = parseInt(script.getAttribute("data-duracao") || "10", 10) * 1000;
   var SOM_URL = script.getAttribute("data-som") || "";       // mp3/ogg gravado; sem isso usa o som sintetizado
   var VOLUME = parseFloat(script.getAttribute("data-volume") || "1");
+  var REPETICOES = parseInt(script.getAttribute("data-repeticoes") || "2", 10); // quantas vezes o som toca em sequência
   var MUTE_KEY = "celebracao_venda_mudo", CLAIM = "celebracao_venda_claim_";
 
   // ---------- Som ----------
@@ -133,7 +134,9 @@
   function tocarSom(url) {
     url = url || SOM_URL;
     if (!url) return fanfarra();
-    try { var a = new Audio(url); a.volume = Math.max(0, Math.min(1, VOLUME)); a.play()["catch"](function () { fanfarra(); }); } catch (e) { fanfarra(); }
+    try { var a = new Audio(url); a.volume = Math.max(0, Math.min(1, VOLUME)); var restantes = Math.max(1, REPETICOES) - 1;
+      a.addEventListener("ended", function () { if (restantes-- > 0) { a.currentTime = 0; a.play()["catch"](function () {}); } });
+      a.play()["catch"](function () { fanfarra(); }); } catch (e) { fanfarra(); }
   }
 
   // ---------- Confete ----------
