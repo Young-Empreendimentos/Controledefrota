@@ -52,7 +52,7 @@ const FrotaAuth = (function () {
     }
 
     async function signOut() {
-        try { await sb.auth.signOut(); } catch (e) { /* ignora */ }
+        try { await sb.auth.signOut({ scope: 'local' }); } catch (e) { /* ignora */ }
         SupabaseClient.setToken(null);
         window.location.reload();
     }
